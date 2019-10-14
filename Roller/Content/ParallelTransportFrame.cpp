@@ -407,11 +407,6 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
 
 
 
@@ -442,16 +437,12 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
     //  Does Hanson's algorithm require the initial normal vector to be normalized???
     //   
 
-    XMVECTOR axon_tangent_zero = XMLoadFloat3( &(ptf_curve_derivatives.at(0).axon_tangent_drdt) );
 
     XMVECTOR axon_r_position_zero = XMLoadFloat3( &(ptf_curve_derivatives.at(0).axon_position_r) );
     XMVECTOR axon_r_position_one  = XMLoadFloat3( &(ptf_curve_derivatives.at(1).axon_position_r) );
 
     XMVECTOR axon_delta_r = axon_r_position_one - axon_r_position_zero;
 
-    //  TODO: ???   Regarding the vector cross product below: 
-    //  TODO: ???   should i use the finite difference derivative "axon_tangent_zero" 
-    //  TODO: ???   rather than the simple delta "axon_delta_r" ???
 
     XMVECTOR g_zero = XMVector3Cross(axon_r_position_zero, axon_delta_r);  
 
