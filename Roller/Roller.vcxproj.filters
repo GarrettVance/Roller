@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>c9457710-2fd2-4af3-ae91-2ac063e33afc</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>7a3f81e5-07e0-44e5-864f-a0db83b38bc4</UniqueIdentifier>
+      <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png</Extensions>
+    </Filter>
+    <Filter Include="Content">
+      <UniqueIdentifier>534bf228-e309-4848-b2ac-8a6339c8b64c</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="Common\DirectXHelper.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\StepTimer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DeviceResources.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClCompile Include="Common\DeviceResources.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClInclude Include="Content\Hvy3DScene.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\HUD.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClCompile Include="Content\Hvy3DScene.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\HUD.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <Image Include="Assets\LockScreenLogo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square150x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Wide310x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Filter Include="HLSL">
+      <UniqueIdentifier>{aa13c166-ad48-46a6-870f-2c85578241cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MeshFiles">
+      <UniqueIdentifier>{f353aad8-51e3-44fc-a8d1-63f04ba2cd9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="StrangeAttractor">
+      <UniqueIdentifier>{4d438e63-bda3-4fb8-9c27-55bf24124270}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp" />
+    <ClCompile Include="RollerMain.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Content\ParallelTransportFrame.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\TexCoSphere.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Sphybox.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.h" />
+    <ClInclude Include="RollerMain.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Content\CWS_WaveFrontReader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\ParallelTransportFrame.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Sphybox.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\TexCoSphere.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\StoreLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\2_dds_bump_type_dawning.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\2_dds_color_type_dawning.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\2_dds_default_reflection.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\2_dds_sky_cube_1024.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\2_dds_color_black_dawn.dds">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Roller_TemporaryKey.pfx" />
+    <None Include="MeshFiles\abSphere.mtl">
+      <Filter>MeshFiles</Filter>
+    </None>
+    <None Include="MeshFiles\abSphere.wfobj">
+      <Filter>MeshFiles</Filter>
+    </None>
+    <None Include="MeshFiles\frustumBrot.mtl">
+      <Filter>MeshFiles</Filter>
+    </None>
+    <None Include="MeshFiles\frustumBrot.wfobj">
+      <Filter>MeshFiles</Filter>
+    </None>
+    <None Include="StrangeAttractor\lorenz.ghvdata">
+      <Filter>StrangeAttractor</Filter>
+    </None>
+    <None Include="StrangeAttractor\lorenz_debug.ghvdata">
+      <Filter>StrangeAttractor</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="HLSL\PhongBumpPixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\PhongBumpVertexShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\PTF_PixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\PTF_VertexShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Sphybox_VertexShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Sphybox_PixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
