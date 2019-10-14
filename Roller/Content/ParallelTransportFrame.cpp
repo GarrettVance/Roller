@@ -170,31 +170,6 @@ void ParallelTransportFrame::Render()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
 void ParallelTransportFrame::Create_Vertex_Buffer(
     std::vector<HvyDX::VHG_Vertex_PosTex>  *p_vect_vertices,
     ID3D11Buffer** p_buffer_object
@@ -244,7 +219,7 @@ void ParallelTransportFrame::Create_Vertex_Buffer(
 
 void ParallelTransportFrame::gv_finite_differences()
 {
-	double const e_underflow = 0.0000000001;
+	double const e_underflow = 0.0000000001; // TODO: too small;
 
 
 	for (UINT idx_nodes = 0; idx_nodes < ptf_axon_arc_density; idx_nodes++)
@@ -259,12 +234,9 @@ void ParallelTransportFrame::gv_finite_differences()
 
 		UINT idx_song = (idx_nodes == (-1 + ptf_axon_arc_density)) ? 0 : 1 + idx_nodes;
 
-		//  assert the space curve is a closed loop (ouroboros); 
-
-
 		double dt =
-			ptf_curve_derivatives.at(idx_song).axon_elapsed_time -
-			ptf_curve_derivatives.at(idx_neung).axon_elapsed_time; 
+			ptf_axons.at(idx_song).axon_elapsed_time -
+			ptf_axons.at(idx_neung).axon_elapsed_time; 
 
 		if (abs(dt) < e_underflow)
 		{
@@ -272,25 +244,13 @@ void ParallelTransportFrame::gv_finite_differences()
 			else if (dt > 0.00) dt = e_underflow;
 		}
 
+        XMVECTOR drdt = (ptf_axons.at(idx_song).axon_position_V -
+                ptf_axons.at(idx_neung).axon_position_V) / (float)dt;
 
-		double tangent_drdt_x =
-			(ptf_curve_derivatives.at(idx_song).axon_position_r.x -
-			 ptf_curve_derivatives.at(idx_neung).axon_position_r.x) / dt;
-
-		double tangent_drdt_y =
-			(ptf_curve_derivatives.at(idx_song).axon_position_r.y -
-			 ptf_curve_derivatives.at(idx_neung).axon_position_r.y) / dt;
-
-		double tangent_drdt_z =
-			(ptf_curve_derivatives.at(idx_song).axon_position_r.z -
-			 ptf_curve_derivatives.at(idx_neung).axon_position_r.z) / dt;
-
-			
-		ptf_curve_derivatives.at(idx_neung).axon_tangent_drdt = DirectX::XMFLOAT3(
-			(float)tangent_drdt_x,
-			(float)tangent_drdt_y,
-			(float)tangent_drdt_z
-		);
+        XMStoreFloat3(
+		    &ptf_axons.at(idx_neung).axon_tangent_drdt,
+            drdt
+        ); 
 	}
 }
 
@@ -319,7 +279,7 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 {  
     //  My typical Lorenz Attractor data file has 60 thousand records. 
     
-    ptf_curve_derivatives.resize(1 + ptf_axon_arc_density); 
+    ptf_axons.resize(1 + ptf_axon_arc_density); 
 
 #ifdef _DEBUG
 	std::fstream gFStr("StrangeAttractor\\lorenz_debug.ghvdata", std::ios_base::in);
@@ -331,7 +291,7 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
 	std::string g_line = ""; 
 
-	VHG_Axonodromal_Vertex    tmp_curve;
+	VHG_Axonodromal_Vertex    tmp_axon;
 
     uint32_t idxLoop = 0; 
 
@@ -347,33 +307,6 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
         //      ==================================
 
 
-#if 3 == 4
-
-        std::vector<double> fields_split = gv_split_n<double>(g_line);
-
-		XMFLOAT3   tmp_position = XMFLOAT3( 
-                static_cast<float>(fields_split[0]), 
-                static_cast<float>(fields_split[1]), 
-                static_cast<float>(fields_split[2])
-        );
-
-        float tmp_time = static_cast<float>(fields_split[3]);
-
-        XMFLOAT3   tmp_drdt = XMFLOAT3( 
-                static_cast<float>(fields_split[4]), 
-                static_cast<float>(fields_split[5]), 
-                static_cast<float>(fields_split[6])
-        );
-
-        XMFLOAT3   tmp_d2rdt2 = XMFLOAT3( 
-                static_cast<float>(fields_split[7]), 
-                static_cast<float>(fields_split[8]), 
-                static_cast<float>(fields_split[9])
-        );
-
-		tmp_curve = { tmp_position, tmp_time, tmp_drdt, tmp_d2rdt2 };
-#else
-
         XMFLOAT3   tmp_position; 
         float tmp_time; 
         XMFLOAT3   tmp_drdt; 
@@ -383,13 +316,12 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
         gSS >> tmp_position.x >> tmp_position.y >> tmp_position.z >> tmp_time >> tmp_drdt.x >> tmp_drdt.y >> tmp_drdt.z >> tmp_d2rdt2.x >> tmp_d2rdt2.y >> tmp_d2rdt2.z;
 
-		tmp_curve = { tmp_position, tmp_time, tmp_drdt, tmp_d2rdt2 };
 
-#endif
+        XMVECTOR   tmp_position_V = XMLoadFloat3(&tmp_position);
 
+		tmp_axon = { tmp_position, tmp_position_V, tmp_time, tmp_drdt, tmp_d2rdt2 };
 
-        ptf_curve_derivatives.at(idxLoop) = tmp_curve;
-
+        ptf_axons.at(idxLoop) = tmp_axon;
 
         idxLoop++;
 
@@ -401,10 +333,8 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 	
 	gFStr.close(); //           CLOSE THE FILE !!!!! 
 
-    return ptf_curve_derivatives.size();
+    return ptf_axons.size();
 }  
-
-
 
 
 
@@ -412,17 +342,25 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
 void ParallelTransportFrame::HansonParallelTransportFrame()
 {
-
     // TODO:   merge vectors  unit_tangent and transported_normal into one vector
 
-    //  TODO: bug: this loop takes no account of the card of ptf_curve_derivatives vector...
+    //  TODO: bug: this loop takes no account of the card of ptf_axons vector...
 
 
-    std::vector<XMVECTOR> *transported_normal = new std::vector<XMVECTOR>();
+
+    // Expected cardinality of surface_points = ptf_axon_arc_density * (1 + tube_facets).
+
+    uint32_t card_surfpts = ptf_axon_arc_density * (1 + ptf_tube_facets); 
+
+#ifdef GHV_OPTION_PUSH
+    std::vector<VHG_Vertex_PosTex>   *surface_points = new std::vector<VHG_Vertex_PosTex>();
+#else
+    std::vector<VHG_Vertex_PosTex>   *surface_points = new std::vector<VHG_Vertex_PosTex>(card_surfpts);
+#endif 
 
 
-    std::vector<VHG_Vertex_PosTex>   *surface_points = new std::vector<VHG_Vertex_PosTex>;
     std::vector<VHG_Vertex_PosTex>   *spoke_lines = new std::vector<VHG_Vertex_PosTex>;
+
     std::vector<VHG_Vertex_PosTex>   *surface_triangles = new std::vector<VHG_Vertex_PosTex>;
 
 
@@ -433,43 +371,32 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
     //  Bootstrap: Special case when idx_nodes == 0: 
     //  ========================================
     //  Construct what Andrew J. Hanson terms the "initial normal vector V0": 
-    //         
-    //  Does Hanson's algorithm require the initial normal vector to be normalized???
     //   
 
+    XMVECTOR axon_delta_r = ptf_axons.at(1).axon_position_V - ptf_axons.at(0).axon_position_V; 
 
-    XMVECTOR axon_r_position_zero = XMLoadFloat3( &(ptf_curve_derivatives.at(0).axon_position_r) );
-    XMVECTOR axon_r_position_one  = XMLoadFloat3( &(ptf_curve_derivatives.at(1).axon_position_r) );
-
-    XMVECTOR axon_delta_r = axon_r_position_one - axon_r_position_zero;
-
-
-    XMVECTOR g_zero = XMVector3Cross(axon_r_position_zero, axon_delta_r);  
+    XMVECTOR g_zero = XMVector3Cross(ptf_axons.at(0).axon_position_V, axon_delta_r);  
 
     XMVECTOR h_normalized_normal = XMVector3Normalize(XMVector3Cross(g_zero, axon_delta_r));
 
-    transported_normal->push_back(h_normalized_normal);
+    ptf_axons.at(0).transported_normal = h_normalized_normal;
 
-    XMStoreFloat3(& (ptf_curve_derivatives.at(0).axon_normal), h_normalized_normal); // ghv: added 20190313; 
-
+    XMStoreFloat3(& (ptf_axons.at(0).axon_normal), h_normalized_normal); // ghv: added 20190313; 
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //              End of bootstrap; 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-
     XMVECTOR nut_curr; 
-    XMVECTOR nut_next = XMVector3Normalize(XMLoadFloat3(&(ptf_curve_derivatives.at(0).axon_tangent_drdt)));
+    XMVECTOR nut_next = XMVector3Normalize(XMLoadFloat3(&(ptf_axons.at(0).axon_tangent_drdt)));
     const float epsilon_length = 0.0001f;
-
 
     for (UINT idx_frame = 0; idx_frame < ptf_axon_arc_density; idx_frame++)
     {
-
         if (idx_frame < -1 + ptf_axon_arc_density)
         {
             nut_curr = nut_next;
-            nut_next = XMVector3Normalize(XMLoadFloat3(&(ptf_curve_derivatives.at(1 + idx_frame).axon_tangent_drdt)));
+            nut_next = XMVector3Normalize(XMLoadFloat3(&(ptf_axons.at(1 + idx_frame).axon_tangent_drdt)));
 
             XMVECTOR B_vector = XMVector3Cross(nut_curr, nut_next);
 
@@ -478,7 +405,7 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
 
             if (B_length < epsilon_length)
             {
-                next_transported_normal = transported_normal->at(idx_frame);
+                next_transported_normal = ptf_axons.at(idx_frame).transported_normal; 
             }
             else
             {
@@ -488,44 +415,30 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
                 XMMATRIX gv_rotation_matrix = XMMatrixRotationNormal(B_unit_vector, angle_theta);
 
                 next_transported_normal = XMVector3Transform(
-                    transported_normal->at(idx_frame),
+                    ptf_axons.at(idx_frame).transported_normal,
                     gv_rotation_matrix
                 );
             }
-            transported_normal->push_back(next_transported_normal);
 
-            XMStoreFloat3(&(ptf_curve_derivatives.at(1 + idx_frame).axon_normal), next_transported_normal); // ghv: added 20190313; 
+            ptf_axons.at(1 + idx_frame).transported_normal = next_transported_normal; 
+
+            XMStoreFloat3(&(ptf_axons.at(1 + idx_frame).axon_normal), next_transported_normal); // ghv: added 20190313; 
         }
 
-
-
-    // }
-    // for (UINT idx_frame = 0; idx_frame < ptf_axon_arc_density; idx_frame++)
-    // {
-
-
-
-        XMVECTOR unit_normal = XMVector3Normalize(
-            transported_normal->at(idx_frame)
-        );
+        XMVECTOR unit_normal = XMVector3Normalize(ptf_axons.at(idx_frame).transported_normal);
 
         //     In order to orient and position the cross-section, 
         //     need another normal vector in addition to the transported_normal.
         //     I have chosen to use vector B = T cross N.
 
         XMVECTOR binormal = XMVector3Cross(
-            XMVector3Normalize(XMLoadFloat3(&(ptf_curve_derivatives.at(idx_frame).axon_tangent_drdt))), 
+            XMVector3Normalize(XMLoadFloat3(&(ptf_axons.at(idx_frame).axon_tangent_drdt))), 
             unit_normal
         );
 
-        XMStoreFloat3(& (ptf_curve_derivatives.at(idx_frame).axon_binormal), binormal); // ghv: added 20190315; 
+        XMStoreFloat3(& (ptf_axons.at(idx_frame).axon_binormal), binormal); // ghv: added 20190315; 
 
-        //   I expect that binormal doesn't need explicit normalization;
-        //           
-        //   The fact that node_unit_tangent and unit_normal are perpendicular
-        //   implies angle = 90 degrees, thus sin(angle) = 1,
-        //   thus magnitude of cross product is product of magnitudes,
-        //   and each of those is known to be 1.
+        //   TODO: confirm that the binormal doesn't need explicit normalization;
 
         for (uint32_t k = 0; k <= ptf_tube_facets; ++k)  //  HAZARD : loop upper limit is <= not < !!!!
         {
@@ -538,37 +451,38 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
             float C_x = ptf_tube_radius * cosf(angle_phi);
             float C_y = ptf_tube_radius * sinf(angle_phi);
 
-            float N_x = XMVectorGetX(unit_normal);
-            float N_y = XMVectorGetY(unit_normal);
-            float N_z = XMVectorGetZ(unit_normal);
+            XMVECTOR vectorP = ptf_axons.at(idx_frame).axon_position_V + C_x * unit_normal + C_y * binormal; 
 
-            float B_x = XMVectorGetX(binormal);
-            float B_y = XMVectorGetY(binormal);
-            float B_z = XMVectorGetZ(binormal);
+            XMFLOAT3 tmp_f3;
+            XMStoreFloat3(&tmp_f3, vectorP); 
+            VHG_Vertex_PosTex tmp_surface_point;  //  or can use  = { tmp_f3, XMFLOAT2(0.f, 0.f) };
+            tmp_surface_point.e_pos = tmp_f3; 
+            tmp_surface_point.e_texco = XMFLOAT2(0.f, 0.f);
 
-            float P_x = (ptf_curve_derivatives.at(idx_frame)).axon_position_r.x + C_x * N_x + C_y * B_x;
-            float P_y = (ptf_curve_derivatives.at(idx_frame)).axon_position_r.y + C_x * N_y + C_y * B_y;
-            float P_z = (ptf_curve_derivatives.at(idx_frame)).axon_position_r.z + C_x * N_z + C_y * B_z;
 
-            VHG_Vertex_PosTex tmp_surface_point = { XMFLOAT3(P_x, P_y, P_z), XMFLOAT2(0.f, 0.f) };
+            uint32_t ii = idx_frame * (1 + ptf_tube_facets) + k; 
+
+
+#ifdef GHV_OPTION_PUSH
             surface_points->push_back(tmp_surface_point);
+#else
+            surface_points->at(ii).e_pos = tmp_f3; 
+            surface_points->at(ii).e_texco = XMFLOAT2(0.f, 0.f);
+#endif
+
+
 
             //  std::vector just for LINELIST topology to show radial segments
             //  from space curve out to points on the tube surface:
 
             VHG_Vertex_PosTex tmp_spoke;
-            tmp_spoke.e_pos = (ptf_curve_derivatives.at(idx_frame)).axon_position_r;
+            tmp_spoke.e_pos = (ptf_axons.at(idx_frame)).axon_position_r;
             tmp_spoke.e_texco = XMFLOAT2(0.f, 0.f);
             spoke_lines->push_back(tmp_spoke);
             spoke_lines->push_back(tmp_surface_point);
         }
         // for each cross-section facet;
     }
-
-
-
-
-
 
     ptf_vertex_buffer_1_count = (uint32_t)spoke_lines->size();
     
@@ -577,7 +491,6 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
         ptf_vertex_buffer_1_buffer.ReleaseAndGetAddressOf() 
     );  // use topology = LINELIST;
     
-    //     Expected cardinality of std::vector surface_points = ptf_axon_arc_density * (1 + tube_facets).
 
     VHG_Vertex_PosTex quad_top_left;
     VHG_Vertex_PosTex quad_top_right;
@@ -626,7 +539,7 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
     delete surface_triangles; surface_triangles = nullptr;
     delete spoke_lines; spoke_lines = nullptr;
     delete surface_points; surface_points = nullptr;
-    delete transported_normal; transported_normal = nullptr;
+
 }  
 
 

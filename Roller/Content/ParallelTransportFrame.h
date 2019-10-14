@@ -23,16 +23,28 @@
 
 #define GHV_OPTION_DRAW_SPOKES
 
+#undef GHV_OPTION_PUSH
+
+
 
 namespace HvyDX
 {
     struct VHG_Axonodromal_Vertex
     {
         DirectX::XMFLOAT3       axon_position_r;
+        DirectX::XMVECTOR       axon_position_V;
+
         float                   axon_elapsed_time;
         DirectX::XMFLOAT3       axon_tangent_drdt;
         DirectX::XMFLOAT3       axon_d2rdt2;
-        DirectX::XMFLOAT3       axon_normal;
+
+
+        // 
+        DirectX::XMFLOAT3       axon_normal; // consumed in Hvy3DScene.cpp; 
+        DirectX::XMVECTOR       transported_normal; 
+        // 
+
+
         DirectX::XMFLOAT3       axon_binormal; 
     };
 
@@ -72,7 +84,7 @@ namespace HvyDX
 
         bool            LoadingComplete() { return ptf_loadingComplete; }
 
-        std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_curve_derivatives; }
+        std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_axons; }
 
         void Create_Rasterizer_State(void); 
 
@@ -97,7 +109,7 @@ namespace HvyDX
         uint32_t                                            ptf_axon_arc_density;
         uint32_t                                            ptf_tube_facets;
         float                                               ptf_tube_radius;
-        std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_curve_derivatives; 
+        std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
 
 
 

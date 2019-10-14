@@ -227,7 +227,12 @@ void Hvy3DScene::CalculateViewMatrix(
         //  "backwards" can be obtained from "forwards": 
         XMVECTOR normalizedBackwardsXMV = XMVectorNegate(normalizedTangentXMV);
 
+
+
         //  Normal vector from space curve (hazard: it points inward rather than outward): 
+        //  
+        //  TODO:  use new XMVECTOR member transported_normal: 
+        //    
         XMVECTOR unNormalizedNormalXMV = XMVectorSet(p_Normal.x, p_Normal.y, p_Normal.z, 0.f);  // homogeneous w_component = 0; 
         XMVECTOR normalizedNormalXMV = XMVector3Normalize(unNormalizedNormalXMV); 
 
@@ -628,26 +633,6 @@ void Hvy3DScene::Render()
 
     this->DrawIndexedPerMaterial();   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
