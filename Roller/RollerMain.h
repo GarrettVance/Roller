@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Common\StepTimer.h"
-#include "Common\DeviceResources.h"
+#include "Common\AlteredDevice.h"
 #include "Content\Hvy3DScene.h"
 #include "Content\HUD.h"
 

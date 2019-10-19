@@ -70,6 +70,9 @@
     <ClCompile Include="Content\Sphybox.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Common\AlteredDevice.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -86,6 +89,9 @@
     </ClInclude>
     <ClInclude Include="Content\TexCoSphere.h">
       <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\AlteredDevice.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

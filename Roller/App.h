@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "pch.h"
-#include "Common\DeviceResources.h"
+#include "Common\AlteredDevice.h"
 #include "RollerMain.h"
 
 namespace Roller

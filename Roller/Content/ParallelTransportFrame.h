@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "..\Common\DeviceResources.h"
+#include "..\Common\AlteredDevice.h"
 #include "..\Common\StepTimer.h"
 
 

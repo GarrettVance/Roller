@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "..\Common\DeviceResources.h"
+#include "..\Common\AlteredDevice.h"
 
 
 namespace HvyDX

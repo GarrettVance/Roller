@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include "..\Common\DeviceResources.h"
+#include "..\Common\AlteredDevice.h"
 #include "..\Common\StepTimer.h"
 
 
