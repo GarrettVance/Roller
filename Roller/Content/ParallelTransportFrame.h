@@ -6,7 +6,7 @@
 //                      
 //                      
 //          Implementation of Parallel Transport Frames
-//		    following Andrew J. Hanson's 1995 paper 
+//          following Andrew J. Hanson's 1995 paper 
 //          "Parallel Transport Approach to Curve Framing".
 //                      
 //                      
@@ -70,7 +70,7 @@ namespace HvyDX
         void CreateDeviceDependentResources();
         void ReleaseDeviceDependentResources();
 
-		void Update(
+        void Update(
             DirectX::XMMATRIX        const&           p_ParallelTransportFrameWorldMatrix,
             DirectX::XMMATRIX        const&           p_parentSceneViewMatrix,
             DirectX::XMMATRIX        const&           p_parentSceneProjectionMatrix
@@ -94,7 +94,7 @@ namespace HvyDX
 
         void HansonParallelTransportFrame(); 
 
-		void gv_finite_differences();
+        void gv_finite_differences();
 
         size_t gv_read_lorenz_data_file(); 
 

@@ -203,8 +203,8 @@ void TexCoSphere::LoadVertexBuffer(uint32_t* pVBCard, uint32_t* pIBCard)
 
     D3D11_SUBRESOURCE_DATA vertexBufferData = {0};
     vertexBufferData.pSysMem = &(plainPositionVertices[0]); 
-	vertexBufferData.SysMemPitch = 0;
-	vertexBufferData.SysMemSlicePitch = 0;
+    vertexBufferData.SysMemPitch = 0;
+    vertexBufferData.SysMemSlicePitch = 0;
 
     CD3D11_BUFFER_DESC vertexBufferDesc(
         (UINT)vectorSpherolux.size() * sizeof(XMFLOAT3), 
@@ -215,8 +215,8 @@ void TexCoSphere::LoadVertexBuffer(uint32_t* pVBCard, uint32_t* pIBCard)
 
     D3D11_SUBRESOURCE_DATA vertexBufferData = {0};
     vertexBufferData.pSysMem = &(vectorSpherolux[0]); 
-	vertexBufferData.SysMemPitch = 0;
-	vertexBufferData.SysMemSlicePitch = 0;
+    vertexBufferData.SysMemPitch = 0;
+    vertexBufferData.SysMemSlicePitch = 0;
 
     CD3D11_BUFFER_DESC vertexBufferDesc(
         (UINT)vectorSpherolux.size() * sizeof(VHG_Spherolux), 
@@ -236,8 +236,8 @@ void TexCoSphere::LoadVertexBuffer(uint32_t* pVBCard, uint32_t* pIBCard)
 
     D3D11_SUBRESOURCE_DATA indexBufferData = {0};
     indexBufferData.pSysMem = &(vectorIndexes[0]);
-	indexBufferData.SysMemPitch = 0;
-	indexBufferData.SysMemSlicePitch = 0;
+    indexBufferData.SysMemPitch = 0;
+    indexBufferData.SysMemSlicePitch = 0;
 
     CD3D11_BUFFER_DESC indexBufferDesc( 
         (UINT)vectorIndexes.size() * sizeof(uint32_t), 
@@ -270,22 +270,22 @@ void TexCoSphere::TexCoSphereRender(void)
     auto context = m_deviceResources->GetD3DDeviceContext();
 
 
-	UINT stride = sizeof(VHG_Spherolux);
-	UINT offset = 0;
-	context->IASetVertexBuffers( 0, 1, Sphere1_vertexBuffer.GetAddressOf(), &stride, &offset );
+    UINT stride = sizeof(VHG_Spherolux);
+    UINT offset = 0;
+    context->IASetVertexBuffers( 0, 1, Sphere1_vertexBuffer.GetAddressOf(), &stride, &offset );
 
     //   Each entry of the Index Buffer is a uint32_t value, having size of 32 bits: 
-	context->IASetIndexBuffer( Sphere1_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
+    context->IASetIndexBuffer( Sphere1_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-	context->IASetInputLayout(Sphere1_inputLayout.Get());
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
-	context->VSSetShader(Sphere1_vertexShader.Get(), nullptr, 0 );
+    context->IASetInputLayout(Sphere1_inputLayout.Get());
 
-	context->VSSetConstantBuffers1( 0, 1, m_constantBuffer.GetAddressOf(), nullptr, nullptr );  // Slot zero;
+
+    context->VSSetShader(Sphere1_vertexShader.Get(), nullptr, 0 );
+
+    context->VSSetConstantBuffers1( 0, 1, m_constantBuffer.GetAddressOf(), nullptr, nullptr );  // Slot zero;
 
 
 
@@ -309,7 +309,7 @@ void TexCoSphere::TexCoSphereRender(void)
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-	context->PSSetShader( Sphere1_pixelShader.Get(), nullptr, 0 );
+    context->PSSetShader( Sphere1_pixelShader.Get(), nullptr, 0 );
 
 
 
@@ -321,7 +321,7 @@ void TexCoSphere::TexCoSphereRender(void)
 
     context->PSSetSamplers(0, 1, Sphere1_TextureSamplerState.GetAddressOf());  // Slot zero;
 
-	context->DrawIndexed( Sphere1_indexCount, 0, 0 );
+    context->DrawIndexed( Sphere1_indexCount, 0, 0 );
 }
 
 

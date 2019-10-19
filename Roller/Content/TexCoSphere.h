@@ -17,8 +17,8 @@
 namespace HvyDX
 {
 
-	class VHG_Spherolux
-	{
+    class VHG_Spherolux
+    {
     public: 
         VHG_Spherolux(): 
             position(DirectX::XMFLOAT3(0.f, 0.f, 0.f)), 
@@ -42,11 +42,11 @@ namespace HvyDX
 
         //  ghv : TODO: copy ctor...
 
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 normal;
-		DirectX::XMFLOAT2 texcoGlobal;
-		DirectX::XMFLOAT2 texcoLocal;
-	};
+        DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
+        DirectX::XMFLOAT2 texcoGlobal;
+        DirectX::XMFLOAT2 texcoLocal;
+    };
 
 
     struct VHG_asdf_MVP_Struct

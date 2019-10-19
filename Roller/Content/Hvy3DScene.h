@@ -61,16 +61,16 @@ namespace HvyDX
 
 
 
-	class Hvy3DScene
-	{
-	public:
-		Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+    class Hvy3DScene
+    {
+    public:
+        Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
-		void CreateDeviceDependentResources();
+        void CreateDeviceDependentResources();
 
-		void CreateWindowSizeDependentResources();
+        void CreateWindowSizeDependentResources();
 
-		void ReleaseDeviceDependentResources();
+        void ReleaseDeviceDependentResources();
 
 
 
@@ -90,17 +90,17 @@ namespace HvyDX
             DirectX::XMFLOAT3 p_Binormal
         );
 
-		void Update(DX::StepTimer const& timer);
+        void Update(DX::StepTimer const& timer);
 
-		void Render();
+        void Render();
 
         void RenderMandelPod(); 
 
 
-	private:
-		void CreateColorSampler();
+    private:
+        void CreateColorSampler();
 
-		void CreateEnvironmentSampler();
+        void CreateEnvironmentSampler();
 
         void ComputeVertexTangents(
             std::vector<WaveFrontReader<DWORD>::WFR_Vertex> &   refVertices,
@@ -113,7 +113,7 @@ namespace HvyDX
 
         void DrawIndexedPerMaterial(void);
 
-	private:
+    private:
         std::shared_ptr<DX::DeviceResources>                m_deviceResources;
 
         std::unique_ptr<HvyDX::ParallelTransportFrame>      m_PTF;
@@ -127,9 +127,9 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11DepthStencilView>      e_msaaDepthStencilView;
         unsigned int                                        e_MSAASampleCount;
         bool                                                e_UsingMSAA;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_solid;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_wireframe;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_mandelpod;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_solid;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_wireframe;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_mandelpod;
 
         bool                                                e_ViewMatrixFixed; 
         float                                               e_ChiralityZOffset; // TODO: cleanup;
@@ -141,14 +141,14 @@ namespace HvyDX
 
         std::vector<VHG_MaterialUsage_struct>              *e_vect_material_usages;
 
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	        m_waveFrontInputLayoutTNB;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		        m_vertexBuffer;
-		uint32	                                            m_vertexCount;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		        m_indexBuffer;
-		uint32	                                            m_indexCount;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	        m_vertexShader;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	        m_pixelShader;
-		bool                                                m_loadingComplete;
+        Microsoft::WRL::ComPtr<ID3D11InputLayout>           m_waveFrontInputLayoutTNB;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                m_vertexBuffer;
+        uint32                                              m_vertexCount;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                m_indexBuffer;
+        uint32                                              m_indexCount;
+        Microsoft::WRL::ComPtr<ID3D11VertexShader>          m_vertexShader;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>           m_pixelShader;
+        bool                                                m_loadingComplete;
 
         DirectX::XMMATRIX                                   e_spacePodWorldTransformation; 
         DirectX::XMMATRIX                                   e_xmmatrix_view_trx;
@@ -165,7 +165,7 @@ namespace HvyDX
         std::unique_ptr<DirectX::Mouse>                     kmi_mouse;
 
         DirectX::XMVECTOR                                   cameraPosition;
-	};
+    };
 
 }
 //  Closes namespace HvyDX;

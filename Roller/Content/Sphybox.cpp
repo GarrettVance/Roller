@@ -33,7 +33,7 @@ Sphybox::Sphybox(const std::shared_ptr<DX::DeviceResources>& deviceResources)
     );
 
 
-	CreateDeviceDependentResources();
+    CreateDeviceDependentResources();
 }
 
 

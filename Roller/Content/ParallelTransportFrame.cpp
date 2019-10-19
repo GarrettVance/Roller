@@ -6,7 +6,7 @@
 //                      
 //                      
 //          Implementation of Parallel Transport Frames
-//		    following Andrew J. Hanson's 1995 paper 
+//          following Andrew J. Hanson's 1995 paper 
 //          "Parallel Transport Approach to Curve Framing".
 //                      
 //                      
@@ -225,39 +225,35 @@ void ParallelTransportFrame::Create_Vertex_Buffer(
 
 void ParallelTransportFrame::gv_finite_differences()
 {
-	double const e_underflow = 0.0000000001; // TODO: too small;
+    double const e_underflow = 0.0000000001; // TODO: too small;
 
 
-	for (UINT idx_nodes = 0; idx_nodes < ptf_axon_arc_density; idx_nodes++)
-	{
-
-		//   
+    for (UINT idx_nodes = 0; idx_nodes < ptf_axon_arc_density; idx_nodes++)
+    {
         //    Obtain an approximate first derivative dr/dt 
-		//    (aka tangent vector) via finite difference techniques:
-		//               
+        //    (aka tangent vector) via finite difference techniques:
 
-		UINT idx_neung = idx_nodes;
+        UINT idx_neung = idx_nodes;
+        UINT idx_song = (idx_nodes == (-1 + ptf_axon_arc_density)) ? 0 : 1 + idx_nodes;
 
-		UINT idx_song = (idx_nodes == (-1 + ptf_axon_arc_density)) ? 0 : 1 + idx_nodes;
+        double dt =
+            ptf_axons.at(idx_song).axon_elapsed_time -
+            ptf_axons.at(idx_neung).axon_elapsed_time; 
 
-		double dt =
-			ptf_axons.at(idx_song).axon_elapsed_time -
-			ptf_axons.at(idx_neung).axon_elapsed_time; 
-
-		if (abs(dt) < e_underflow)
-		{
-			if (dt < 0.00) dt = -1.00 * e_underflow;
-			else if (dt > 0.00) dt = e_underflow;
-		}
+        if (abs(dt) < e_underflow)
+        {
+            if (dt < 0.00) dt = -1.00 * e_underflow;
+            else if (dt > 0.00) dt = e_underflow;
+        }
 
         XMVECTOR drdt = (ptf_axons.at(idx_song).axon_position_V -
                 ptf_axons.at(idx_neung).axon_position_V) / (float)dt;
 
         XMStoreFloat3(
-		    &ptf_axons.at(idx_neung).axon_tangent_drdt,
+            &ptf_axons.at(idx_neung).axon_tangent_drdt,
             drdt
         ); 
-	}
+    }
 }
 
 
@@ -271,8 +267,8 @@ void ParallelTransportFrame::gv_finite_differences()
 
 template<typename T>
 std::vector<T> gv_split_n(const std::string& line) {
-	std::istringstream is(line);
-	return std::vector<T>(std::istream_iterator<T>(is), std::istream_iterator<T>());
+    std::istringstream is(line);
+    return std::vector<T>(std::istream_iterator<T>(is), std::istream_iterator<T>());
 }
 
 
@@ -288,22 +284,22 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
     ptf_axons.resize(1 + ptf_axon_arc_density); 
 
 #ifdef _DEBUG
-	std::fstream gFStr("StrangeAttractor\\lorenz_debug.ghvdata", std::ios_base::in);
+    std::fstream gFStr("StrangeAttractor\\lorenz_debug.ghvdata", std::ios_base::in);
 #else
-	std::fstream gFStr("StrangeAttractor\\lorenz.ghvdata", std::ios_base::in);
+    std::fstream gFStr("StrangeAttractor\\lorenz.ghvdata", std::ios_base::in);
 #endif
 
-	if (!gFStr.is_open()) { return 0; }
+    if (!gFStr.is_open()) { return 0; }
 
-	std::string g_line = ""; 
+    std::string g_line = ""; 
 
-	VHG_Axonodromal_Vertex    tmp_axon;
+    VHG_Axonodromal_Vertex    tmp_axon;
 
     uint32_t idxLoop = 0; 
 
 
-	while (std::getline(gFStr, g_line))
-	{
+    while (std::getline(gFStr, g_line))
+    {
         //             Fields in data file:
         //      ==================================
         //      position_x, position_y, position_z
@@ -325,7 +321,7 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
         XMVECTOR   tmp_position_V = XMLoadFloat3(&tmp_position);
 
-		tmp_axon = { tmp_position, tmp_position_V, tmp_time, tmp_drdt, tmp_d2rdt2 };
+        tmp_axon = { tmp_position, tmp_position_V, tmp_time, tmp_drdt, tmp_d2rdt2 };
 
         ptf_axons.at(idxLoop) = tmp_axon;
 
@@ -335,9 +331,9 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
         {
             break;
         }
-	}
-	
-	gFStr.close(); //           CLOSE THE FILE !!!!! 
+    }
+    
+    gFStr.close(); //           CLOSE THE FILE !!!!! 
 
     return ptf_axons.size();
 }  

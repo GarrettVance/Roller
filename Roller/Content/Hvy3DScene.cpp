@@ -20,10 +20,10 @@ using namespace Windows::Foundation;
 
 
 Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-	m_loadingComplete(false),
-	m_indexCount(0),
+    m_loadingComplete(false),
+    m_indexCount(0),
     e_UsingMSAA(true),
-	m_deviceResources(deviceResources), 
+    m_deviceResources(deviceResources), 
     e_ViewMatrixFixed(true)
 {
     e_ChiralityZOffset = +36.f;   // TODO: remove;
@@ -44,8 +44,8 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
     kmi_mouse->SetWindow(Windows::UI::Core::CoreWindow::GetForCurrentThread());
 
 
-	CreateDeviceDependentResources();
-	CreateWindowSizeDependentResources();
+    CreateDeviceDependentResources();
+    CreateWindowSizeDependentResources();
 }
 
 
@@ -53,15 +53,15 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
 
 void Hvy3DScene::CreateWindowSizeDependentResources()
 {
-	Size outputSize = m_deviceResources->GetOutputSize();
-	float aspectRatio = outputSize.Width / outputSize.Height;
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
+    Size outputSize = m_deviceResources->GetOutputSize();
+    float aspectRatio = outputSize.Width / outputSize.Height;
+    float fovAngleY = 70.0f * XM_PI / 180.0f;
 
 
-	if (aspectRatio < 1.0f)
-	{
-		fovAngleY *= 2.0f;
-	}
+    if (aspectRatio < 1.0f)
+    {
+        fovAngleY *= 2.0f;
+    }
     e_xmmatrix_projection_trx = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.1f, 1000.0f ); // Chirality Left-handed; 
 
     // Allocate all memory resources that change on a window SizeChanged event:
@@ -546,7 +546,7 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
 void Hvy3DScene::DrawIndexedPerMaterial(void)
 {
-	auto context = m_deviceResources->GetD3DDeviceContext();
+    auto context = m_deviceResources->GetD3DDeviceContext();
 
 
     uint32_t ib_index_offset = 0; 
@@ -581,10 +581,10 @@ void Hvy3DScene::DrawIndexedPerMaterial(void)
 
 void Hvy3DScene::Render()
 {
-	if (!m_loadingComplete)
-	{
-		return;
-	}
+    if (!m_loadingComplete)
+    {
+        return;
+    }
 
     if (!this->m_PTF->LoadingComplete())
     {
@@ -674,7 +674,7 @@ void Hvy3DScene::Render()
         context->ResolveSubresource(backBuffer.Get(), 0, e_msaaRenderTarget.Get(), 0, DX::DeviceResources::c_backBufferFormat);
 
         // Revert state by setting the the back buffer RTV on the pipeline (to render HUD text): 
-	    ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
+        ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
         context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
     }
     context->RSSetState(e_rasterizer_state_solid.Get());
@@ -690,40 +690,37 @@ void Hvy3DScene::Render()
 
 void Hvy3DScene::RenderMandelPod()
 {
-	auto context = m_deviceResources->GetD3DDeviceContext();
+    auto context = m_deviceResources->GetD3DDeviceContext();
 
-	DirectX::XMStoreFloat4x4(
-		&e_conbuf_Transform_data.trxWVP, 
-		XMMatrixTranspose(e_spacePodWorldTransformation * e_xmmatrix_view_trx * e_xmmatrix_projection_trx) 
-	);
+    DirectX::XMStoreFloat4x4(
+        &e_conbuf_Transform_data.trxWVP, 
+        XMMatrixTranspose(e_spacePodWorldTransformation * e_xmmatrix_view_trx * e_xmmatrix_projection_trx) 
+    );
 
-
-	DirectX::XMStoreFloat4x4(
-		&e_conbuf_Transform_data.trxWorld, 
-		XMMatrixTranspose(e_spacePodWorldTransformation)
-	);
+    DirectX::XMStoreFloat4x4(
+        &e_conbuf_Transform_data.trxWorld, 
+        XMMatrixTranspose(e_spacePodWorldTransformation)
+    );
 
     //  matrix for inverse transpose of World transformation: 
 
     XMMATRIX inverseTransposeWorld = XMMatrixInverse(nullptr, XMMatrixTranspose(e_spacePodWorldTransformation)); 
 
-	DirectX::XMStoreFloat4x4(
-		&e_conbuf_Transform_data.trxInvTposeWorld, 
-		XMMatrixTranspose(inverseTransposeWorld)
-	);
+    DirectX::XMStoreFloat4x4(
+        &e_conbuf_Transform_data.trxInvTposeWorld, 
+        XMMatrixTranspose(inverseTransposeWorld)
+    );
 
     //  matrix for inverse of View transformation: 
 
     XMMATRIX inverseView = XMMatrixInverse(nullptr, e_xmmatrix_view_trx); 
 
-	DirectX::XMStoreFloat4x4(
-		&e_conbuf_Transform_data.trxInverseView, 
-		XMMatrixTranspose(inverseView)
-	);
+    DirectX::XMStoreFloat4x4(
+        &e_conbuf_Transform_data.trxInverseView, 
+        XMMatrixTranspose(inverseView)
+    );
 
-	context->UpdateSubresource1( e_conbuf_Transform_buffer.Get(), 0, NULL, &e_conbuf_Transform_data, 0, 0, 0 );
-
-
+    context->UpdateSubresource1( e_conbuf_Transform_buffer.Get(), 0, NULL, &e_conbuf_Transform_data, 0, 0, 0 );
 
     //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     //          
@@ -731,15 +728,15 @@ void Hvy3DScene::RenderMandelPod()
     //      
     //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-	UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
-	UINT vb_offset = 0;
-	context->IASetVertexBuffers( 0, 1, m_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset );
+    UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
+    UINT vb_offset = 0;
+    context->IASetVertexBuffers( 0, 1, m_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset );
     context->IASetIndexBuffer( m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	context->IASetInputLayout(m_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
-	context->VSSetShader( m_vertexShader.Get(), nullptr, 0 );
-	context->VSSetConstantBuffers1( 0, 1, e_conbuf_Transform_buffer.GetAddressOf(), nullptr, nullptr );
-	context->PSSetShader( m_pixelShader.Get(), nullptr, 0 );
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->IASetInputLayout(m_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
+    context->VSSetShader( m_vertexShader.Get(), nullptr, 0 );
+    context->VSSetConstantBuffers1( 0, 1, e_conbuf_Transform_buffer.GetAddressOf(), nullptr, nullptr );
+    context->PSSetShader( m_pixelShader.Get(), nullptr, 0 );
 
     //   Must bind all three samplers for Phong Bump shading: 
 
@@ -748,9 +745,7 @@ void Hvy3DScene::RenderMandelPod()
         e_normalSampler.Get(), 
         e_environmentSampler.Get() 
     }; 
-
     context->PSSetSamplers(0, 3, arrSamplers);
-
 
     this->DrawIndexedPerMaterial();   
 }
@@ -1244,85 +1239,85 @@ void Hvy3DScene::CreateDeviceDependentResources()
 
     CreateEnvironmentSampler(); 
 
-	//      Load shaders asynchronously: 
+    //      Load shaders asynchronously: 
 
-	auto loadVSTask = DX::ReadDataAsync(L"PhongBumpVertexShader.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"PhongBumpPixelShader.cso");
+    auto loadVSTask = DX::ReadDataAsync(L"PhongBumpVertexShader.cso");
+    auto loadPSTask = DX::ReadDataAsync(L"PhongBumpPixelShader.cso");
 
 
-	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) 
+    auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) 
     {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateVertexShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_vertexShader
-				)
-			);
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreateVertexShader(
+                &fileData[0],
+                fileData.size(),
+                nullptr,
+                &m_vertexShader
+                )
+            );
 
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc [] =
-		{
-			{ "POSITION",   0, DXGI_FORMAT_R32G32B32_FLOAT,   0,                             0,   D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD",   0, DXGI_FORMAT_R32G32_FLOAT,      0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "BITANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
+        static const D3D11_INPUT_ELEMENT_DESC vertexDesc [] =
+        {
+            { "POSITION",   0, DXGI_FORMAT_R32G32B32_FLOAT,   0,                             0,   D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD",   0, DXGI_FORMAT_R32G32_FLOAT,      0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BITANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT,   0,   D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        };
 
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateInputLayout(
-				vertexDesc,
-				ARRAYSIZE(vertexDesc),
-				&fileData[0],
-				fileData.size(),
-				&m_waveFrontInputLayoutTNB
-				)
-			);
-	});
-
-
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreateInputLayout(
+                vertexDesc,
+                ARRAYSIZE(vertexDesc),
+                &fileData[0],
+                fileData.size(),
+                &m_waveFrontInputLayoutTNB
+                )
+            );
+    });
 
 
-	auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData) 
+
+
+    auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData) 
     {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_pixelShader
-				)
-			);
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreatePixelShader(
+                &fileData[0],
+                fileData.size(),
+                nullptr,
+                &m_pixelShader
+                )
+            );
 
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(VHG_conbuf_MVPA_struct) , D3D11_BIND_CONSTANT_BUFFER);
+        CD3D11_BUFFER_DESC constantBufferDesc(sizeof(VHG_conbuf_MVPA_struct) , D3D11_BIND_CONSTANT_BUFFER);
 
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&e_conbuf_Transform_buffer
-				)
-			);
-	});
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreateBuffer(
+                &constantBufferDesc,
+                nullptr,
+                &e_conbuf_Transform_buffer
+                )
+            );
+    });
 
 
 
-	auto createCubeTask = (createPSTask && createVSTask).then([this] () 
+    auto createCubeTask = (createPSTask && createVSTask).then([this] () 
     {
 #ifdef GHV_OPTION_LOAD_MESH_MODEL
         CreateVertexBufferWavefrontOBJ();
 #endif
-	});
+    });
 
 
 
 
 
-	createCubeTask.then([this] () 
+    createCubeTask.then([this] () 
     {
-		m_loadingComplete = true;
-	});
+        m_loadingComplete = true;
+    });
 
 }
 
@@ -1338,17 +1333,17 @@ void Hvy3DScene::CreateDeviceDependentResources()
 
 void Hvy3DScene::ReleaseDeviceDependentResources()
 {
-	m_loadingComplete = false;
-	m_vertexShader.Reset();
+    m_loadingComplete = false;
+    m_vertexShader.Reset();
 
-	m_waveFrontInputLayoutTNB.Reset();
+    m_waveFrontInputLayoutTNB.Reset();
 
-	m_pixelShader.Reset();
-
-
-	e_conbuf_Transform_buffer.Reset();
+    m_pixelShader.Reset();
 
 
-	m_vertexBuffer.Reset();
-	m_indexBuffer.Reset();
+    e_conbuf_Transform_buffer.Reset();
+
+
+    m_vertexBuffer.Reset();
+    m_indexBuffer.Reset();
 }
