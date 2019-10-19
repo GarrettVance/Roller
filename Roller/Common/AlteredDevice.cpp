@@ -481,6 +481,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
     // Depth test parameters
     //---------------------------------------------------------------
     gv_depth_stencil_descr.DepthEnable = true;
+    gv_depth_stencil_descr.DepthEnable = FALSE;
 
 
     gv_depth_stencil_descr.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;

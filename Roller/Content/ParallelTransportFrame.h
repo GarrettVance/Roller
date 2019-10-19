@@ -21,11 +21,6 @@
 #include "..\Common\StepTimer.h"
 
 
-#define GHV_OPTION_DRAW_SPOKES
-
-#undef GHV_OPTION_PUSH
-
-
 
 namespace HvyDX
 {
@@ -52,6 +47,7 @@ namespace HvyDX
     struct VHG_Vertex_PosTex
     {
         DirectX::XMFLOAT3       e_pos;
+        DirectX::XMFLOAT3       e_normal; // ghv: added 20191016 0817;
         DirectX::XMFLOAT2       e_texco;
     };
 
@@ -86,7 +82,6 @@ namespace HvyDX
 
         std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_axons; }
 
-        void Create_Rasterizer_State(void); 
 
         void Create_Input_Layout(
             const std::vector<byte>& p_byte_vector
@@ -111,8 +106,6 @@ namespace HvyDX
         float                                               ptf_tube_radius;
         std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
 
-
-
         Microsoft::WRL::ComPtr<ID3D11InputLayout>           ptf_inputLayout;
 
         Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_vertex_buffer_1_buffer; // for spokes;
@@ -124,8 +117,8 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_Buffer;
         VHG_ConBuf_MVP_Struct                               ptf_WVP_Data;
         Microsoft::WRL::ComPtr<ID3D11VertexShader>          ptf_vertexShader;
-        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       ptf_rasterizer_state;
-        D3D11_FILL_MODE                                     ptf_rasterizer_fill_mode;
+        
+
         Microsoft::WRL::ComPtr<ID3D11PixelShader>           ptf_pixelShader;
 
 

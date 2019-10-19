@@ -30,12 +30,20 @@ using namespace Windows::Foundation;
 
 
 
+using Microsoft::WRL::ComPtr;
+
+
+
+
+
+
+
+
 
 ParallelTransportFrame::ParallelTransportFrame(const std::shared_ptr<DX::DeviceResources>& deviceResources) 
     :
     m_deviceResources(deviceResources),  
-    ptf_loadingComplete(false),
-    ptf_rasterizer_fill_mode(D3D11_FILL_WIREFRAME)
+    ptf_loadingComplete(false)
 {  
     //   
     //  My typical Lorenz Attractor data file has 60 thousand records. 
@@ -47,13 +55,20 @@ ParallelTransportFrame::ParallelTransportFrame(const std::shared_ptr<DX::DeviceR
 
 #else
 
-    this->ptf_axon_arc_density = 16384;   //  
+    this->ptf_axon_arc_density = 16384 * 4;   //  obfuscate - TODO: need to reduce density.
 
+    this->ptf_axon_arc_density = 8192;
 #endif
 
     //      Configure the tubular loft:
+    //      
+    //  tube_radius = 0.5 will cause terrible overlap of trajectories; 
+    //  tube_radius = 0.1 is about the largest tolerable value; 
+    //      
 
-    this->ptf_tube_radius = 0.05f;      // Spoke length and tube radius > 0.01. 
+    // undo this->ptf_tube_radius = 0.05f;      // Spoke length and tube radius > 0.01. 
+
+    this->ptf_tube_radius = 0.08f;      // Spoke length and tube radius > 0.01. 
 
     this->ptf_tube_facets = 6;
 }  
@@ -104,19 +119,10 @@ void ParallelTransportFrame::Render()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    // Send WVP data to constant buffer
-
     context->UpdateSubresource1( ptf_WVP_Buffer.Get(),   0,  NULL, &ptf_WVP_Data,    0,   0,  0 );
 
 
     context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_Buffer.GetAddressOf(), nullptr,  nullptr );
-
-
-    Create_Rasterizer_State();  // TODO: remove this call, as rasterizer state never changes for ptf loft;
-
-
-    context->RSSetState(ptf_rasterizer_state.Get());
-
 
 
     context->IASetInputLayout(ptf_inputLayout.Get());
@@ -325,7 +331,7 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
         idxLoop++;
 
-        if (idxLoop >= ptf_axon_arc_density)
+        if (idxLoop >= ptf_axon_arc_density)  // obfuscate;
         {
             break;
         }
@@ -344,28 +350,14 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
 {
     // TODO:   merge vectors  unit_tangent and transported_normal into one vector
 
-    //  TODO: bug: this loop takes no account of the card of ptf_axons vector...
-
-
-
-    // Expected cardinality of surface_points = ptf_axon_arc_density * (1 + tube_facets).
-
     uint32_t card_surfpts = ptf_axon_arc_density * (1 + ptf_tube_facets); 
-
-#ifdef GHV_OPTION_PUSH
-    std::vector<VHG_Vertex_PosTex>   *surface_points = new std::vector<VHG_Vertex_PosTex>();
-#else
     std::vector<VHG_Vertex_PosTex>   *surface_points = new std::vector<VHG_Vertex_PosTex>(card_surfpts);
-#endif 
 
 
     std::vector<VHG_Vertex_PosTex>   *spoke_lines = new std::vector<VHG_Vertex_PosTex>;
-
     std::vector<VHG_Vertex_PosTex>   *surface_triangles = new std::vector<VHG_Vertex_PosTex>;
 
-
     size_t record_count = gv_read_lorenz_data_file();
-
 
     //          
     //  Bootstrap: Special case when idx_nodes == 0: 
@@ -459,18 +451,10 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
             tmp_surface_point.e_pos = tmp_f3; 
             tmp_surface_point.e_texco = XMFLOAT2(0.f, 0.f);
 
-
             uint32_t ii = idx_frame * (1 + ptf_tube_facets) + k; 
 
-
-#ifdef GHV_OPTION_PUSH
-            surface_points->push_back(tmp_surface_point);
-#else
             surface_points->at(ii).e_pos = tmp_f3; 
             surface_points->at(ii).e_texco = XMFLOAT2(0.f, 0.f);
-#endif
-
-
 
             //  std::vector just for LINELIST topology to show radial segments
             //  from space curve out to points on the tube surface:
@@ -505,10 +489,10 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
 
             uint32_t ii = i_poloidal + (ptf_tube_facets + 1) * i_axial;
 
-            quad_top_left = { surface_points->at(0 + ii).e_pos, XMFLOAT2(0.f, 1.f) };
-            quad_top_right = { surface_points->at((ptf_tube_facets + 1) + ii).e_pos, XMFLOAT2(0.f, 0.f) };
-            quad_bottom_right = { surface_points->at((ptf_tube_facets + 2) + ii).e_pos, XMFLOAT2(1.f, 0.f) };
-            quad_bottom_left = { surface_points->at(1 + ii).e_pos, XMFLOAT2(1.f, 1.f) };
+            quad_top_left = { surface_points->at(0 + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(0.f, 1.f) };
+            quad_top_right = { surface_points->at((ptf_tube_facets + 1) + ii).e_pos,  XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT2(0.f, 0.f) };
+            quad_bottom_right = { surface_points->at((ptf_tube_facets + 2) + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(1.f, 0.f) };
+            quad_bottom_left = { surface_points->at(1 + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(1.f, 1.f) };
 
             //      Synthesize the 1st of the 2 triangles:
             surface_triangles->push_back(quad_top_left);
@@ -530,51 +514,106 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
         ptf_vertex_buffer_2_buffer.ReleaseAndGetAddressOf() 
     );  // use topology = TRIANGLELIST;
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //  
+    //  Use DirectXMesh ComputeNormals() method 
+    //  to generate vertex normals for each triangle: 
+    //      
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    XMFLOAT2 nul2 = XMFLOAT2(0.f, 0.f);
+    XMFLOAT3 nul3 = XMFLOAT3(0.f, 0.f, 0.f);
+    XMVECTOR nulXMV = XMVectorSet(0.f, 0.f, 0.f, 0.f);
+
+    int32_t countOfVertices = (int32_t)surface_triangles->size(); 
+
+    int32_t countOfTriangles = countOfVertices / 3; 
+    DWORD *arrTriangles = new DWORD[countOfVertices]{ 0 }; 
+
+    int32_t idxCWS = 0; 
+    for (idxCWS = 0; idxCWS < countOfVertices; idxCWS++)
+    {
+        arrTriangles[idxCWS] = idxCWS;
+    }
+
+    XMFLOAT3 *arrVertices = new XMFLOAT3[countOfVertices]{ nul3 }; 
+    XMFLOAT2 *arrTexco = new XMFLOAT2[countOfVertices]{ nul2 }; 
+    int32_t idxVertx = 0; 
+
+    std::vector<VHG_Vertex_PosTex>::iterator itVertx; 
+    for (itVertx = surface_triangles->begin(); itVertx != surface_triangles->end(); ++itVertx) 
+    {
+        arrVertices[idxVertx] = (*itVertx).e_pos;
+        arrTexco[idxVertx] = (*itVertx).e_texco;
+        idxVertx++;
+    }
+
+    XMFLOAT3 *normals = new XMFLOAT3[countOfVertices]{nul3}; 
+
+    DirectX::ComputeNormals(
+        (uint32_t*)arrTriangles, 
+        countOfTriangles, 
+        arrVertices, 
+        countOfVertices, 
+        CNORM_DEFAULT,
+        normals
+    ); 
+
+    //  Move the newly generated normals data into the e_master_lofts vector: 
+
+    idxVertx = 0; 
+    for (itVertx = surface_triangles->begin(); itVertx != surface_triangles->end(); ++itVertx)
+    {
+        (*itVertx).e_normal = normals[idxVertx]; 
+        idxVertx++;
+    }
 
 
+    Platform::String^ plat_local_folder =
+        Windows::Storage::ApplicationData::Current->LocalFolder->Path;
+    std::wstring local_folder_w(plat_local_folder->Begin());
+    std::string loclal_folder_a(local_folder_w.begin(), local_folder_w.end());
+    char fully_qualified_path_a[512];
 
-    //   TODO:   need an Index Buffer
+    sprintf_s(
+        fully_qualified_path_a, 512,
+        "%s\\ghv_lorenz_data.txt",
+        (const char*)loclal_folder_a.c_str()
+    );
 
+
+#if 3 == 4
+    std::ofstream gv_ofstream(fully_qualified_path_a, std::ios::trunc); 
+    if (!gv_ofstream.is_open()) 
+    { 
+        DX::ThrowIfFailed(E_FAIL); 
+    }
+
+    for (uint32_t idxFile = 0; idxFile < countOfVertices; idxFile++) 
+    {
+        char file_record[256];
+        sprintf_s(
+            file_record, 256,
+            "%10.6f \t %10.6f \t %10.6f \t %10.6f \t %10.6f \t %10.6f \t %10.6f \t %10.6f \n",  
+            surface_triangles->at(idxFile).e_pos.x,  
+            surface_triangles->at(idxFile).e_pos.y,  
+            surface_triangles->at(idxFile).e_pos.z,  
+            surface_triangles->at(idxFile).e_normal.x, 
+            surface_triangles->at(idxFile).e_normal.y,  
+            surface_triangles->at(idxFile).e_normal.z,  
+            surface_triangles->at(idxFile).e_texco.x, 
+            surface_triangles->at(idxFile).e_texco.y
+        );
+        gv_ofstream << file_record;
+    }
+    gv_ofstream.close(); 
+#endif
 
     delete surface_triangles; surface_triangles = nullptr;
     delete spoke_lines; spoke_lines = nullptr;
     delete surface_points; surface_points = nullptr;
-
 }  
 
-
-
-
-
-
-
-void ParallelTransportFrame::Create_Rasterizer_State(void)
-{
-    D3D11_RASTERIZER_DESC raster_desc;
-    ZeroMemory(&raster_desc, sizeof(raster_desc));
-
-    raster_desc.FillMode = this->ptf_rasterizer_fill_mode;
-    raster_desc.CullMode = D3D11_CULL_NONE;
-    raster_desc.FrontCounterClockwise = FALSE;
-
-    raster_desc.DepthBias = 0;
-    raster_desc.SlopeScaledDepthBias = 0.0f;
-    raster_desc.DepthBiasClamp = 0.0f;
-
-    raster_desc.DepthClipEnable = TRUE;
-    raster_desc.ScissorEnable = FALSE;
-
-    raster_desc.MultisampleEnable = FALSE;
-    raster_desc.AntialiasedLineEnable = FALSE;
-
-    DX::ThrowIfFailed(
-        this->m_deviceResources->GetD3DDevice()->CreateRasterizerState(
-            &raster_desc,
-            ptf_rasterizer_state.ReleaseAndGetAddressOf()
-        )
-    );
-}  
-//  Closes ParallelTransportFrame::Create_Rasterizer_State; 
 
 
 
@@ -647,9 +686,6 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
     
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-
-
-    Create_Rasterizer_State();
 
 
     //      

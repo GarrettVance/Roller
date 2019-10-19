@@ -94,6 +94,9 @@ namespace HvyDX
 
 		void Render();
 
+        void RenderMandelPod(); 
+
+
 	private:
 		void CreateColorSampler();
 
@@ -116,6 +119,22 @@ namespace HvyDX
         std::unique_ptr<HvyDX::ParallelTransportFrame>      m_PTF;
 
         std::unique_ptr<HvyDX::Sphybox>                     e_sphybox;
+
+
+
+
+        //  MSAA resources
+        //====================================================================
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>             e_msaaRenderTarget;
+        Microsoft::WRL::ComPtr<ID3D11RenderTargetView>      e_msaaRenderTargetView;
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilView>      e_msaaDepthStencilView;
+        unsigned int                                        e_MSAASampleCount;
+        bool                                                e_UsingMSAA;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_solid;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_wireframe;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_mandelpod;
+
+
 
 
 
@@ -167,7 +186,6 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_environmentSampler;
 
 
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state;
 
 
 

@@ -22,6 +22,7 @@ using namespace Windows::Foundation;
 Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
+    e_UsingMSAA(true),
 	m_deviceResources(deviceResources), 
 
     //      
@@ -51,6 +52,12 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
 
 
     //  instantiate the ParallelTransportFrame prior to calling CreateDeviceDependentResources: 
+    //  Well now it's even more important to instantiate the PTF early, 
+    //  because the Hvy3DScene::CreateWindowSizeDependentResources method
+    //  now calls ParallelTransportFrame::CreateWindowSizeDependentResources. 
+    //  
+    //  hazard...
+    //  
 
     m_PTF = std::make_unique<HvyDX::ParallelTransportFrame>(deviceResources);
 
@@ -99,8 +106,91 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
 	{
 		fovAngleY *= 2.0f;
 	}
+    e_xmmatrix_projection_trx = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.1f, 1000.0f ); // Chirality Left-handed; 
 
-    e_xmmatrix_projection_trx = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.01f, 100.0f ); // Chirality Left-handed; 
+
+
+
+    // Allocate all memory resources that change on a window SizeChanged event:
+
+
+    // Determine the render target size in pixels: 
+    UINT wRTPixels = static_cast<UINT>(outputSize.Width);  
+    UINT hRTPixels = static_cast<UINT>(outputSize.Height);  
+    UINT backBufferWidth = std::max<UINT>(wRTPixels, 1);
+    UINT backBufferHeight = std::max<UINT>(hRTPixels, 1);
+
+
+
+    // Create an MSAA render target:
+
+    CD3D11_TEXTURE2D_DESC renderTargetDesc(
+        DX::DeviceResources::c_backBufferFormat,
+        backBufferWidth,
+        backBufferHeight,
+        1, // The render target view has only one texture.
+        1, // Use a single mipmap level.
+        D3D11_BIND_RENDER_TARGET,
+        D3D11_USAGE_DEFAULT,
+        0,
+        e_MSAASampleCount
+    );
+
+    auto device = m_deviceResources->GetD3DDevice();
+
+    DX::ThrowIfFailed(device->CreateTexture2D(
+        &renderTargetDesc,
+        nullptr,
+        e_msaaRenderTarget.ReleaseAndGetAddressOf()
+    ));
+
+    CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS, DX::DeviceResources::c_backBufferFormat);
+
+    DX::ThrowIfFailed(device->CreateRenderTargetView(
+        e_msaaRenderTarget.Get(),
+        &renderTargetViewDesc,
+        e_msaaRenderTargetView.ReleaseAndGetAddressOf()
+    ));
+
+
+
+
+
+
+
+    // ghv: Create an MSAA depth stencil view.
+
+    CD3D11_TEXTURE2D_DESC depthStencilDesc(
+        DX::DeviceResources::c_depthBufferFormat,
+        backBufferWidth,
+        backBufferHeight,
+        1, // This depth stencil view has only one texture.
+        1, // Use a single mipmap level.
+        D3D11_BIND_DEPTH_STENCIL,
+        D3D11_USAGE_DEFAULT,
+        0,
+        e_MSAASampleCount
+    );
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
+
+    DX::ThrowIfFailed(device->CreateTexture2D(
+        &depthStencilDesc,
+        nullptr,
+        depthStencil.GetAddressOf()
+    ));
+
+
+    //  ghv: interesting fact: don't need to save the underlying depthStencil Texture2D - 
+    //  rather it just gets discarded after it serves to create the persistent DSV: 
+
+
+    DX::ThrowIfFailed(device->CreateDepthStencilView(
+        depthStencil.Get(),
+        nullptr,
+        e_msaaDepthStencilView.ReleaseAndGetAddressOf()
+    ));
+
 }
 
 
@@ -210,9 +300,13 @@ void Hvy3DScene::CalculateViewMatrix(
 
     if (e_ViewMatrixFixed == true)
     {
-        cameraPosition = XMVectorSet(40.f, 2.f, 28.f, 1.0f); // Use 40.f, 2.f, 28.f, 1.f;
+        // cameraPosition = XMVectorSet(40.f, 2.f, 28.f, 1.0f); // Use 40.f, 2.f, 28.f, 1.f;
 
-        cameraLookAt = XMVectorSet(0.f, 0.5f, +46.f, 1.0f);  // Use 0.f, 0.5f, 46.f, 1.f;
+        // better: cameraPosition = XMVectorSet(40.f, 2.f, 58.f, 1.0f); // Use 40.f, 2.f, 58.f, 1.f;  // better!
+
+        cameraPosition = XMVectorSet(40.f, 2.f, 60.f, 1.0f); // Use 40.f, 2.f, 98.f, 1.f;  
+
+        cameraLookAt = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);  // Use 0.f, 0.5f, 46.f, 1.f;
 
         effectiveUp = cameraWorldUp;
     }
@@ -353,6 +447,25 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
         }
     }
 
+
+    if (kb.F7)
+    {
+        if (e_UsingMSAA == true)
+        {
+            e_UsingMSAA = false;
+        }
+    }
+
+    if (kb.F8)
+    {
+        if (e_UsingMSAA == false)
+        {
+            e_UsingMSAA = true;
+        }
+    }
+
+
+
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -412,10 +525,14 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     if (e_ViewMatrixFixed == true)
     {
         s5 = 4.f;
+
+        // TODO: remove : e_rasterizer_fill_mode = D3D11_FILL_SOLID;
     }
     else
     {
         s5 = 3.f;
+
+        // TODO: remove: e_rasterizer_fill_mode = D3D11_FILL_WIREFRAME;
     }
 
 #ifdef _DEBUG
@@ -520,8 +637,6 @@ void Hvy3DScene::DrawIndexedPerMaterial(void)
 
         ib_index_offset += n_ib_entry_usages; 
     }
-
-    //   C++ StartSlot = 0 corresponds to HLSL Texture2D : register(t0);   
 }
 //  Closes Hvy3DScene::DrawIndexedPerMaterial();  
 
@@ -548,26 +663,103 @@ void Hvy3DScene::Render()
         return;
     }
 
+    auto context = m_deviceResources->GetD3DDeviceContext();
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
+    //  Set the MSAA render target on the pipeline: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    if (e_UsingMSAA)
+    {
+        ID3D11RenderTargetView* rtvs[1] = { e_msaaRenderTargetView.Get() };
+        context->OMSetRenderTargets(1, rtvs, e_msaaDepthStencilView.Get()); // Set both the RTV and the DSV; 
 
-    this->m_PTF->Render(); // Render the Lorenz Attractor loft;  
+        context->ClearRenderTargetView(e_msaaRenderTargetView.Get(), DirectX::Colors::Beige); // Beige...
+        context->ClearDepthStencilView(e_msaaDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
+    //  Render the mandelpod: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+    context->RSSetState(e_rasterizer_state_mandelpod.Get());
 
+    RenderMandelPod();
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
     //  Render the spherical skybox: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    context->RSSetState(e_rasterizer_state_solid.Get());
+
     XMFLOAT3 cameraPosXF3; 
     XMStoreFloat3(&cameraPosXF3, cameraPosition); 
+
     this->e_sphybox->Render(cameraPosXF3, e_xmmatrix_view_trx, e_xmmatrix_projection_trx); 
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
+    //  Render the Lorenz Attractor loft: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    if (e_ViewMatrixFixed == false)
+    {
+        context->RSSetState(e_rasterizer_state_wireframe.Get());
+    }
+    else
+    {
+        context->RSSetState(e_rasterizer_state_solid.Get());
+    }
+    this->m_PTF->Render(); // Render the Lorenz Attractor loft;  
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
+    //  Resolve the MSAA render target: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    if (e_UsingMSAA)
+    {
+        // Get a handle to the swap chain back buffer: 
+        // PIXBeginEvent(context, PIX_COLOR_DEFAULT, L"Resolve");
+        Microsoft::WRL::ComPtr<ID3D11Texture2D1> backBuffer;
+        DX::ThrowIfFailed(m_deviceResources->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer)));
+        context->ResolveSubresource(backBuffer.Get(), 0, e_msaaRenderTarget.Get(), 0, DX::DeviceResources::c_backBufferFormat);
+        // PIXEndEvent(context);
+
+        //  
+        // Set render target for UI which is typically rendered without MSAA.
+        //     
+	    ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
+        // undo ? context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
+        context->OMSetRenderTargets(1, targets, nullptr); // added at 2247;
+    }
+    context->RSSetState(e_rasterizer_state_solid.Get());
+}
 
 
 
-    //  TODO:  break out the MandelPod render into separate method; 
 
 
 
 
+
+
+void Hvy3DScene::RenderMandelPod()
+{
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
 	DirectX::XMStoreFloat4x4(
@@ -629,7 +821,6 @@ void Hvy3DScene::Render()
 
     context->PSSetSamplers(0, 3, arrSamplers);
 
-    context->RSSetState(e_rasterizer_state.Get());
 
     this->DrawIndexedPerMaterial();   
 }
@@ -643,40 +834,22 @@ void Hvy3DScene::ComputeVertexTangents(
 )
 {
     //      
-    //  ghv: My PRTP (Pedagogical Rather Than Performant) version of Lengyel's method. 
-    //  
     //  Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. 
     //  Terathon Software, 2001. 
     //  http://terathon.com/code/tangent.html
     //
-    //
-
 
     uint32_t countOfIndices = (uint32_t)refIndices.size();
     uint32_t countOfTriangles = countOfIndices / 3;
     uint32_t countOfVertices = (uint32_t)refVertices.size(); 
 
-
-
     DirectX::XMVECTOR        *tan1Alloc = new DirectX::XMVECTOR[2 * countOfVertices]; 
-
-
-    DirectX::XMVECTOR        *tan2Ptr = tan1Alloc + countOfVertices;  // Yes I will do math on raw pointers;
-
-
+    DirectX::XMVECTOR        *tan2Ptr = tan1Alloc + countOfVertices;  // do math on raw pointers;
         
     float w_component = 0.f;
 
-
-
-    // unused std::vector<DirectX::XMFLOAT3>    finishedVertexTangents; 
-
-
-
-
     for (uint32_t a = 0; a < countOfTriangles; a++)
     {
-
         uint32_t i1 = refIndices.at(0 + 3 * a); 
         uint32_t i2 = refIndices.at(1 + 3 * a); 
         uint32_t i3 = refIndices.at(2 + 3 * a); 
@@ -685,11 +858,9 @@ void Hvy3DScene::ComputeVertexTangents(
         XMFLOAT3 const & v2 = refVertices.at(i2).position; 
         XMFLOAT3 const & v3 = refVertices.at(i3).position; 
 
-
         XMFLOAT2 const & w1 = refVertices.at(i1).textureCoordinate;
         XMFLOAT2 const & w2 = refVertices.at(i2).textureCoordinate;
         XMFLOAT2 const & w3 = refVertices.at(i3).textureCoordinate;
-
 
         float x1 = v2.x - v1.x;
         float x2 = v3.x - v1.x;
@@ -703,16 +874,7 @@ void Hvy3DScene::ComputeVertexTangents(
         float t1 = w2.y - w1.y;
         float t2 = w3.y - w1.y;
 
-
         float r = 1.0f / (s1 * t2 - s2 * t1);
-
-
-
-
-        // XMFLOAT3   sdir = XMFLOAT3(
-        // XMFLOAT3   tdir = XMFLOAT3(
-
-
 
         DirectX::XMVECTOR sdir = XMVectorSet(
             (t2 * x1 - t1 * x2) * r, 
@@ -721,7 +883,6 @@ void Hvy3DScene::ComputeVertexTangents(
             w_component
         );  
 
-
         DirectX::XMVECTOR tdir = XMVectorSet(
             (s1 * x2 - s2 * x1) * r, 
             (s1 * y2 - s2 * y1) * r,
@@ -729,11 +890,9 @@ void Hvy3DScene::ComputeVertexTangents(
             w_component
         );
 
-
         tan1Alloc[i1] += sdir;
         tan1Alloc[i2] += sdir;
         tan1Alloc[i3] += sdir;
-
 
         tan2Ptr[i1] += tdir;
         tan2Ptr[i2] += tdir;
@@ -746,16 +905,14 @@ void Hvy3DScene::ComputeVertexTangents(
     {
         //  Retrieve the already-computed Vertex Normal provided by the WaveFront OBJ file: 
 
-        DirectX::XMVECTOR const & WaveFrontNormal = XMVectorSet(  //  XMVECTOR supports assignment via "="; 
+        DirectX::XMVECTOR const & WaveFrontNormal = XMVectorSet( 
             refVertices[a].normal.x, 
             refVertices[a].normal.y, 
             refVertices[a].normal.z, 
             w_component
         );  
 
-
-        DirectX::XMVECTOR const & urTangent = tan1Alloc[a];   //  XMVECTOR supports assignment via "="; 
-
+        DirectX::XMVECTOR const & urTangent = tan1Alloc[a]; 
 
         // Gram-Schmidt orthogonalize to get the x, y and z components of the Vertex Tangent: 
 
@@ -765,14 +922,11 @@ void Hvy3DScene::ComputeVertexTangents(
         float dotFloat = dotF3.x; 
 
         XMVECTOR tan3Abnormal = urTangent - XMVectorScale(WaveFrontNormal, dotFloat);
-
         XMVECTOR tan3Hat = XMVector3Normalize(tan3Abnormal); 
 
-            
         //  Compute the chirality and store it in the w-component of the Vertex Tangent: 
 
         XMVECTOR crossXMV = XMVector3Cross(WaveFrontNormal, urTangent); 
-
         XMVECTOR dotCrossXMV = XMVector3Dot(crossXMV, tan2Ptr[a]); 
 
         XMFLOAT3 dotCrossF3;
@@ -788,33 +942,19 @@ void Hvy3DScene::ComputeVertexTangents(
             w_chirality
         );
 
-
         //   And now convert back to XMFLOAT3: 
 
         XMFLOAT3 tmpTangent;
         XMStoreFloat3(&tmpTangent, finallyTangentXMV); 
         refVertices[a].tangent = tmpTangent; 
 
-
         XMFLOAT3 tmpBitangent;
         XMStoreFloat3(&tmpBitangent, BitangentXMV); 
         refVertices[a].bitangent = tmpBitangent;
-
-        
     }  //  Closes "for" loop; 
 
-
     delete[] tan1Alloc;
-
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -831,7 +971,6 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     ptr_to_stack_wfr = &stack_wfr;
 
 
-//   #ifdef GHV_OPTION_SPHERE_NOT_POD
 #ifdef _DEBUG
 
     stack_wfr.Load(L"MeshFiles\\abSphere.wfobj", false);  //  Shiny mirrored disco ball;
@@ -842,26 +981,16 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
 
 #endif
 
-    //    Confirm accessibility of public std::vector "plector_materials": 
-
     UINT debug_plector_materials_card = 0; 
     debug_plector_materials_card = (UINT)stack_wfr.plector_materials.size(); 
-
-
     std::vector<WaveFrontReader<DWORD>::CWS_Material>       ptr_plector_materials = ptr_to_stack_wfr->plector_materials; 
-
-
     std::vector<uint32_t>                               ptr_plector_attributes = ptr_to_stack_wfr->plector_attributes; 
 
 
     //      The count of distinct int32_t values occurring in std::vector "plector_attributes" 
     //      will be needed. 
-    //         
-    //     
     //      Assumption #1: 
     //      Number of distinct int32_t values inside plector_attributes = plector_materials.size(); 
-    //     
-    //     
     //      Assumption #2:  
     //      One of these distinct values will refer to the "default material" 
     //      which won't ever be utilized by a WaveFront obj file / mtl file system. 
@@ -871,14 +1000,12 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     VHG_MaterialUsage_struct     tmp_mat_usage;
     e_vect_material_usages = new std::vector<VHG_MaterialUsage_struct>(); 
 
-
     //     Special Case:   synthesize a "fake" element to begin the std::vector. 
     //     This "fake" element won't ever be accessed, but will keep 
     //     cardinalities in line with element index values: 
     tmp_mat_usage.MaterialOrdinal = 0; 
     tmp_mat_usage.UsageCount = 0; 
     e_vect_material_usages->push_back(tmp_mat_usage); 
-
 
     //     Now get the important MaterialUsage values: 
     uint32_t    prior_material = ptr_plector_attributes.at(0);   
@@ -905,9 +1032,6 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     e_vect_material_usages->push_back(tmp_mat_usage); 
     //  Done counting MaterialUsages. 
 
-
-
-
     //      
     //          Note on Kd, Ka, Ks, shininess, specular etc...
     //      
@@ -918,39 +1042,25 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     //  bool        exampleSpecular = stack_wfr.plector_materials.at(4).bSpecular;
     //           
 
-
-
     //      
     //          Compute Vertex Tangents
     //      
     //  example:  XMFLOAT3 rawNormal = stack_wfr.plector_vertices.at(29).normal;
     //      
 
-
-
-    // not std::vector<WaveFrontReader<DWORD>::WFR_Vertex>  const &   ref_vertices = stack_wfr.plector_vertices; can't be const&; 
-
-
     std::vector<WaveFrontReader<DWORD>::WFR_Vertex> &   ref_vertices = stack_wfr.plector_vertices;
-
     std::vector<DWORD> const & ref_indices = stack_wfr.plector_indices;
 
-
     ComputeVertexTangents(ref_vertices, ref_indices); 
-
-
 
     //  Create the Vertex Buffer for the WaveFrontReader: 
 
     m_vertexCount = (unsigned int)stack_wfr.plector_vertices.size();
 
-
     D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-
     vertexBufferData.pSysMem = &(stack_wfr.plector_vertices[0]);
     vertexBufferData.SysMemPitch = 0;
     vertexBufferData.SysMemSlicePitch = 0;
-
 
     size_t total_allocation_vb = stack_wfr.plector_vertices.size() * sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
 
@@ -969,11 +1079,9 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     m_indexCount = (unsigned int)stack_wfr.plector_indices.size();
 
     D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-
     indexBufferData.pSysMem = &(stack_wfr.plector_indices[0]);
     indexBufferData.SysMemPitch = 0;
     indexBufferData.SysMemSlicePitch = 0;
-
 
     size_t total_allocation_ib = stack_wfr.plector_indices.size() * sizeof(DWORD);
 
@@ -996,24 +1104,50 @@ void Hvy3DScene::CreateRasterizerState()
 {
     D3D11_RASTERIZER_DESC   rasterizerstate_descr;
     ZeroMemory(&rasterizerstate_descr, sizeof(rasterizerstate_descr));
+    rasterizerstate_descr.DepthBias = 0;
+    rasterizerstate_descr.SlopeScaledDepthBias = 0.0f;
+    rasterizerstate_descr.DepthBiasClamp = 0.0f;
+    rasterizerstate_descr.DepthClipEnable = TRUE;
+    rasterizerstate_descr.ScissorEnable = FALSE;
+    rasterizerstate_descr.MultisampleEnable = TRUE;
+    rasterizerstate_descr.AntialiasedLineEnable = FALSE;
 
+
+    //  Generic solid rasterizer state: 
 
     rasterizerstate_descr.FillMode = D3D11_FILL_SOLID;
+    rasterizerstate_descr.FrontCounterClockwise = FALSE;
+    rasterizerstate_descr.CullMode = D3D11_CULL_BACK;
 
-    rasterizerstate_descr.FrontCounterClockwise = false;  //  The human head faces are FRONT_FACE_CLOCKWISE;
+    DX::ThrowIfFailed(
+        m_deviceResources->GetD3DDevice()->CreateRasterizerState(
+        &rasterizerstate_descr,
+        e_rasterizer_state_solid.ReleaseAndGetAddressOf()
+    ));
 
+    //  Specific wireframe rasterizer state for ptf tube loft: 
 
+    rasterizerstate_descr.FillMode = D3D11_FILL_WIREFRAME;
+    rasterizerstate_descr.FrontCounterClockwise = FALSE;
+    rasterizerstate_descr.CullMode = D3D11_CULL_NONE;
 
-    rasterizerstate_descr.CullMode = D3D11_CULL_BACK; // GOLD: 
+    DX::ThrowIfFailed(
+        m_deviceResources->GetD3DDevice()->CreateRasterizerState(
+        &rasterizerstate_descr,
+        e_rasterizer_state_wireframe.ReleaseAndGetAddressOf()
+    ));
 
-    rasterizerstate_descr.CullMode = D3D11_CULL_NONE; //  TODO:  experimental; 
+    //  Specific solid rasterizer state for mandelpod with reversed chirality: 
 
-
+    rasterizerstate_descr.FillMode = D3D11_FILL_SOLID;
+    rasterizerstate_descr.FrontCounterClockwise = false;
+    rasterizerstate_descr.CullMode = D3D11_CULL_NONE;
     rasterizerstate_descr.MultisampleEnable = FALSE;
 
-    DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateRasterizerState(
+    DX::ThrowIfFailed(
+        m_deviceResources->GetD3DDevice()->CreateRasterizerState(
         &rasterizerstate_descr,
-        e_rasterizer_state.ReleaseAndGetAddressOf()
+        e_rasterizer_state_mandelpod.ReleaseAndGetAddressOf()
     ));
 }
 
@@ -1088,6 +1222,35 @@ void Hvy3DScene::CreateEnvironmentSampler()
 
 void Hvy3DScene::CreateDeviceDependentResources()
 {
+
+    for (e_MSAASampleCount = DX::DeviceResources::c_targetSampleCount; e_MSAASampleCount > 1; e_MSAASampleCount--)
+    {
+        UINT levels = 0;
+
+        if (FAILED(m_deviceResources->GetD3DDevice()->CheckMultisampleQualityLevels(DX::DeviceResources::c_backBufferFormat, e_MSAASampleCount, &levels)))
+        {
+            continue;
+        }
+
+        if (levels > 0)
+        {
+            break;
+        }
+    }
+
+    if (e_MSAASampleCount < 2)
+    {
+        throw std::exception("MSAA not supported");
+    }
+
+
+
+
+
+
+
+
+
     this->m_PTF->CreateDeviceDependentResources();
 
     this->e_sphybox->CreateDeviceDependentResources();
@@ -1217,7 +1380,9 @@ void Hvy3DScene::CreateDeviceDependentResources()
 
 	auto createCubeTask = (createPSTask && createVSTask).then([this] () 
     {
+#ifdef GHV_OPTION_LOAD_MESH_MODEL
         CreateVertexBufferWavefrontOBJ();
+#endif
 	});
 
 

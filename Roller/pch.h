@@ -27,7 +27,11 @@
 
 #pragma comment(lib, "DirectXTK")
 
+#include "DirectXMesh.h"
+#pragma comment(lib, "DirectXMesh")
 
-#undef  GHV_OPTION_ENABLE_DOUBLE_PRECISION_MATH
 
+#define GHV_OPTION_LOAD_MESH_MODEL
+
+#define GHV_OPTION_DRAW_SPOKES
 
