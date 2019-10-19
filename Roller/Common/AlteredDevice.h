@@ -79,7 +79,7 @@ namespace DX
 		// Direct3D rendering objects. Required for 3D.
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1>	m_d3dRenderTargetView;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>	m_d3dDepthStencilView;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> ghv_DepthStencilState;  //  <---- here!!!!
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gv_DepthStencilState; // ghv: for blending in Klein Quartic;
 		D3D11_VIEWPORT									m_screenViewport;
 
 		// Direct2D drawing components.

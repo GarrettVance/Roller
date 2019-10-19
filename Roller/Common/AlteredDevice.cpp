@@ -409,7 +409,9 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 		);
 
 	// Create a render target view of the swap chain back buffer.
+
 	ComPtr<ID3D11Texture2D1> backBuffer;
+
 	DX::ThrowIfFailed(
 		m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer))
 		);
@@ -422,12 +424,9 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 			)
 		);
 
+	// Create a depth stencil view for use with 3D rendering if needed: 
 
-
-
-	// Create a depth stencil view for use with 3D rendering if needed.
-
-	CD3D11_TEXTURE2D_DESC1 depthStencilDesc(
+	CD3D11_TEXTURE2D_DESC1 oem_depthStencilDesc(
 		c_depthBufferFormat, 
 		lround(m_d3dRenderTargetSize.Width),
 		lround(m_d3dRenderTargetSize.Height),
@@ -436,95 +435,73 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 		D3D11_BIND_DEPTH_STENCIL
 		);
 
-	ComPtr<ID3D11Texture2D1> depthStencil;
+	ComPtr<ID3D11Texture2D1> temporary_depthStencil;
 
-	DX::ThrowIfFailed( m_d3dDevice->CreateTexture2D1( &depthStencilDesc, nullptr, &depthStencil ) );
-
-	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
-
-	DX::ThrowIfFailed( m_d3dDevice->CreateDepthStencilView( depthStencil.Get(), &depthStencilViewDesc, &m_d3dDepthStencilView ) );
-
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //              
-    //             ghv : 20181206 : Add support for blending 
-    //             ========================================= 
-    //              
-    //              
-    //   ghv : IMPORTANT for BLENDING 
-    //   ==========================================================
-    //   This app will use an ID3D11BlendState to render the Klein Quartic 
-    //   as two blended layers (via pixel shaders gv_Program_10_FS 
-    //   and gv_Program_01_FS_Overlay). 
-    //  
-    //   In support of that goal, use an ID3D11DepthStencilState with 
-    //   its "DepthFunc" member set to D3D11_COMPARISON_ALWAYS 
-    //   (rather than the typical choice of D3D11_COMPARISON_LESS). 
-    //     
-    //   The purpose of using DepthFunc = D3D11_COMPARISON_ALWAYS is essentially 
-    //   to short-circuit the Depth Test so that pixels from BOTH pixel shaders 
-    //   will be rendered  (and so that pixels from BOTH pixel shaders will 
-    //   participate in the Blending Equation. 
-    //               
-    //              
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    //          
-    //      ghv : Create Depth-Stencil State: 
-    //          
-
-    D3D11_DEPTH_STENCIL_DESC gv_depth_stencil_descr = { 0 };
-
-
-    // Depth test parameters
-    //---------------------------------------------------------------
-    gv_depth_stencil_descr.DepthEnable = true;
-    gv_depth_stencil_descr.DepthEnable = FALSE;
-
-
-    gv_depth_stencil_descr.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-
-
-    gv_depth_stencil_descr.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; //  Kubrick EVA Pod;
-
-
-
-    // Stencil test parameters
-    //---------------------------------------------------------------
-    gv_depth_stencil_descr.StencilEnable = false;
-    gv_depth_stencil_descr.StencilReadMask = 0xFF;
-    gv_depth_stencil_descr.StencilWriteMask = 0xFF;
-
-    // Stencil operations if pixel is front-facing
-    //---------------------------------------------------------------
-    gv_depth_stencil_descr.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    gv_depth_stencil_descr.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    gv_depth_stencil_descr.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    gv_depth_stencil_descr.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Stencil operations if pixel is back-facing
-    //---------------------------------------------------------------
-    gv_depth_stencil_descr.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    gv_depth_stencil_descr.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-    gv_depth_stencil_descr.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    gv_depth_stencil_descr.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-
-    DX::ThrowIfFailed(
-        m_d3dDevice->CreateDepthStencilState(
-            &gv_depth_stencil_descr, 
-            ghv_DepthStencilState.GetAddressOf()
+	DX::ThrowIfFailed(
+        m_d3dDevice->CreateTexture2D1( 
+            &oem_depthStencilDesc, 
+            nullptr, 
+            &temporary_depthStencil
         )
     );
 
-    //                  
-    //      ghv : Bind the Depth-Stencil State to the OM Stage: 
-    //                  
+	CD3D11_DEPTH_STENCIL_VIEW_DESC oem_depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
 
-    m_d3dContext->OMSetDepthStencilState(ghv_DepthStencilState.Get(), 0);
+	DX::ThrowIfFailed(
+        m_d3dDevice->CreateDepthStencilView(
+            temporary_depthStencil.Get(), 
+            &oem_depthStencilViewDesc, 
+            &m_d3dDepthStencilView
+        )
+    );
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //              
+    //        ghv 20181206  Configure blending for Klein Quartic
+    //        ==================================================
+    //  Use ID3D11BlendState to render the Klein Quartic as 2 blended layers 
+    //  via pixel shaders gv_10_FS and gv_01_FS_Overlay. 
+    //    
+    //  Set DepthFunc = D3D11_COMPARISON_ALWAYS in ID3D11DepthStencilState
+    //  so that pixels from BOTH pixel shaders will pass the Depth Test 
+    //  and participate in the blending equation. 
+    //              
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    D3D11_DEPTH_STENCIL_DESC depth_stencil_state_descr = { 0 };
+    // Depth test parameters
+    //---------------------------------------------------------------
+    depth_stencil_state_descr.DepthEnable = TRUE;
+    depth_stencil_state_descr.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depth_stencil_state_descr.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    // Stencil test parameters
+    //---------------------------------------------------------------
+    depth_stencil_state_descr.StencilEnable = FALSE;
+    depth_stencil_state_descr.StencilReadMask = 0xFF;
+    depth_stencil_state_descr.StencilWriteMask = 0xFF;
+    // Stencil operations if pixel is front-facing
+    //---------------------------------------------------------------
+    depth_stencil_state_descr.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depth_stencil_state_descr.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+    depth_stencil_state_descr.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depth_stencil_state_descr.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    // Stencil operations if pixel is back-facing
+    //---------------------------------------------------------------
+    depth_stencil_state_descr.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depth_stencil_state_descr.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+    depth_stencil_state_descr.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depth_stencil_state_descr.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+    DX::ThrowIfFailed(
+        m_d3dDevice->CreateDepthStencilState(
+            &depth_stencil_state_descr, 
+            gv_DepthStencilState.GetAddressOf()
+        )
+    );
+
+    m_d3dContext->OMSetDepthStencilState(gv_DepthStencilState.Get(), 0); // Bind DS state to pipeline;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

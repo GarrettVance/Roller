@@ -120,9 +120,6 @@ namespace HvyDX
 
         std::unique_ptr<HvyDX::Sphybox>                     e_sphybox;
 
-
-
-
         //  MSAA resources
         //====================================================================
         Microsoft::WRL::ComPtr<ID3D11Texture2D>             e_msaaRenderTarget;
@@ -134,31 +131,17 @@ namespace HvyDX
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_wireframe;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>		e_rasterizer_state_mandelpod;
 
-
-
-
-
         bool                                                e_ViewMatrixFixed; 
-        float                                               e_ChiralityZOffset;
+        float                                               e_ChiralityZOffset; // TODO: cleanup;
 
-
-
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_mirror;  // formerly  e_srv_color;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_mirror; 
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_black;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_normal;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_environment;
 
-
-
-
         std::vector<VHG_MaterialUsage_struct>              *e_vect_material_usages;
 
-
-
-
-
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	        m_waveFrontInputLayoutTNB;
-
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		        m_vertexBuffer;
 		uint32	                                            m_vertexCount;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		        m_indexBuffer;
@@ -167,44 +150,21 @@ namespace HvyDX
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	        m_pixelShader;
 		bool                                                m_loadingComplete;
 
-
-
-
-
-
         DirectX::XMMATRIX                                   e_spacePodWorldTransformation; 
         DirectX::XMMATRIX                                   e_xmmatrix_view_trx;
         DirectX::XMMATRIX                                   e_xmmatrix_projection_trx;
 
         Microsoft::WRL::ComPtr<ID3D11Buffer>                e_conbuf_Transform_buffer;
-        VHG_conbuf_MVPA_struct                              e_conbuf_Transform_data;
-
-
+        VHG_conbuf_MVPA_struct                              e_conbuf_Transform_data; // TODO: rename;
 
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_colorSampler;
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_normalSampler;
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_environmentSampler;
 
+        std::unique_ptr<DirectX::Keyboard>                  kmi_keyboard;
+        std::unique_ptr<DirectX::Mouse>                     kmi_mouse;
 
-
-
-
-        std::unique_ptr<DirectX::Keyboard>              kmi_keyboard;
-        std::unique_ptr<DirectX::Mouse>                 kmi_mouse;
-
-
-
-        DirectX::XMVECTOR                               cameraPosition;
-
-
-
-		float                                           kmi_degreesPerSecond;
-        float                                           kmi_pitch;
-        float                                           kmi_yaw;
-        bool                                            kmi_option_mesh_rotating;
-        bool                                            kmi_option_mesh_x_axis_ortho;
-        float                                           kmi_option_rotation_direction;
-
+        DirectX::XMVECTOR                                   cameraPosition;
 	};
 
 }

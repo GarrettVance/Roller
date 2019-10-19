@@ -24,73 +24,29 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
 	m_indexCount(0),
     e_UsingMSAA(true),
 	m_deviceResources(deviceResources), 
-
-    //      
-    //      
-    // 
-    e_ViewMatrixFixed(true), 
-    // 
-    //      
-    //      
-    kmi_degreesPerSecond(45),  // use 25 for debug;
-    kmi_pitch(0),  
-    kmi_yaw(0),  
-    //      
-    //      
-    kmi_option_mesh_rotating(true),  
-    kmi_option_rotation_direction(-1.f), 
-    kmi_option_mesh_x_axis_ortho(true) // IMPORTANT : set to "true";
-    //      
-    //      
-    //      
+    e_ViewMatrixFixed(true)
 {
-
-
-    e_ChiralityZOffset = +36.f;   // Use positive 36 for Chirality Left-handed; 
-
-
+    e_ChiralityZOffset = +36.f;   // TODO: remove;
 
 
     //  instantiate the ParallelTransportFrame prior to calling CreateDeviceDependentResources: 
-    //  Well now it's even more important to instantiate the PTF early, 
-    //  because the Hvy3DScene::CreateWindowSizeDependentResources method
-    //  now calls ParallelTransportFrame::CreateWindowSizeDependentResources. 
-    //  
-    //  hazard...
-    //  
 
     m_PTF = std::make_unique<HvyDX::ParallelTransportFrame>(deviceResources);
-
-
 
     //  instantiate the Sphybox prior to calling CreateDeviceDependentResources: 
 
     e_sphybox = std::make_unique<HvyDX::Sphybox>(deviceResources);
         
 
-
-
-
-
     kmi_keyboard = std::make_unique<DirectX::Keyboard>(); 
     kmi_keyboard->SetWindow(Windows::UI::Core::CoreWindow::GetForCurrentThread());
-
     kmi_mouse = std::make_unique<DirectX::Mouse>(); 
     kmi_mouse->SetWindow(Windows::UI::Core::CoreWindow::GetForCurrentThread());
 
 
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
-        
-
-
 }
-
-
-
-
-
-
 
 
 
@@ -108,19 +64,13 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
 	}
     e_xmmatrix_projection_trx = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.1f, 1000.0f ); // Chirality Left-handed; 
 
-
-
-
     // Allocate all memory resources that change on a window SizeChanged event:
-
 
     // Determine the render target size in pixels: 
     UINT wRTPixels = static_cast<UINT>(outputSize.Width);  
     UINT hRTPixels = static_cast<UINT>(outputSize.Height);  
     UINT backBufferWidth = std::max<UINT>(wRTPixels, 1);
     UINT backBufferHeight = std::max<UINT>(hRTPixels, 1);
-
-
 
     // Create an MSAA render target:
 
@@ -152,12 +102,6 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
         e_msaaRenderTargetView.ReleaseAndGetAddressOf()
     ));
 
-
-
-
-
-
-
     // ghv: Create an MSAA depth stencil view.
 
     CD3D11_TEXTURE2D_DESC depthStencilDesc(
@@ -172,34 +116,23 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
         e_MSAASampleCount
     );
 
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> temp_MSAA_depthStencil;
 
     DX::ThrowIfFailed(device->CreateTexture2D(
         &depthStencilDesc,
         nullptr,
-        depthStencil.GetAddressOf()
+        temp_MSAA_depthStencil.GetAddressOf()
     ));
 
-
-    //  ghv: interesting fact: don't need to save the underlying depthStencil Texture2D - 
-    //  rather it just gets discarded after it serves to create the persistent DSV: 
-
+    //  interesting:  don't need to save the underlying depthStencil Texture2D - 
+    //  rather it just gets discarded...
 
     DX::ThrowIfFailed(device->CreateDepthStencilView(
-        depthStencil.Get(),
+        temp_MSAA_depthStencil.Get(),
         nullptr,
         e_msaaDepthStencilView.ReleaseAndGetAddressOf()
     ));
-
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -734,18 +667,15 @@ void Hvy3DScene::Render()
     if (e_UsingMSAA)
     {
         // Get a handle to the swap chain back buffer: 
-        // PIXBeginEvent(context, PIX_COLOR_DEFAULT, L"Resolve");
         Microsoft::WRL::ComPtr<ID3D11Texture2D1> backBuffer;
         DX::ThrowIfFailed(m_deviceResources->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer)));
-        context->ResolveSubresource(backBuffer.Get(), 0, e_msaaRenderTarget.Get(), 0, DX::DeviceResources::c_backBufferFormat);
-        // PIXEndEvent(context);
 
-        //  
-        // Set render target for UI which is typically rendered without MSAA.
-        //     
+        //  Resolve: 
+        context->ResolveSubresource(backBuffer.Get(), 0, e_msaaRenderTarget.Get(), 0, DX::DeviceResources::c_backBufferFormat);
+
+        // Revert state by setting the the back buffer RTV on the pipeline (to render HUD text): 
 	    ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
-        // undo ? context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
-        context->OMSetRenderTargets(1, targets, nullptr); // added at 2247;
+        context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
     }
     context->RSSetState(e_rasterizer_state_solid.Get());
 }
