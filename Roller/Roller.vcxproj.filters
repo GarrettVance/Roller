@@ -17,12 +17,6 @@
     <ClInclude Include="Common\StepTimer.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Common\DeviceResources.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClCompile Include="Common\DeviceResources.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClInclude Include="Content\Hvy3DScene.h">
       <Filter>Content</Filter>
     </ClInclude>

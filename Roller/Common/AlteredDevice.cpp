@@ -1,5 +1,13 @@
-﻿#include "pch.h"
-#include "DeviceResources.h"
+﻿//          
+//          
+//  ghv 20191018 2037   
+//  File renamed to AlteredDevice.cpp after diverging from oem DeviceResources.cpp; 
+//          
+//       
+
+
+#include "pch.h"
+#include "AlteredDevice.h"
 #include "DirectXHelper.h"
 
 using namespace D2D1;
@@ -10,6 +18,20 @@ using namespace Windows::Graphics::Display;
 using namespace Windows::UI::Core;
 using namespace Windows::UI::Xaml::Controls;
 using namespace Platform;
+
+
+
+
+
+const DXGI_FORMAT DX::DeviceResources::c_backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+const DXGI_FORMAT DX::DeviceResources::c_depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
+const unsigned int DX::DeviceResources::c_targetSampleCount = 8;
+
+
+
+
+
+
 
 namespace DisplayMetrics
 {
@@ -250,7 +272,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 			2, // Double-buffered swap chain.
 			lround(m_d3dRenderTargetSize.Width),
 			lround(m_d3dRenderTargetSize.Height),
-			DXGI_FORMAT_B8G8R8A8_UNORM,
+			c_backBufferFormat,
 			0
 			);
 
@@ -271,21 +293,41 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 	else
 	{
 		// Otherwise, create a new one using the same adapter as the existing Direct3D device.
+
 		DXGI_SCALING scaling = DisplayMetrics::SupportHighResolutions ? DXGI_SCALING_NONE : DXGI_SCALING_STRETCH;
+
+
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
 
 		swapChainDesc.Width = lround(m_d3dRenderTargetSize.Width);		// Match the size of the window.
 		swapChainDesc.Height = lround(m_d3dRenderTargetSize.Height);
-		swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;				// This is the most common swap chain format.
-		swapChainDesc.Stereo = false;
-		swapChainDesc.SampleDesc.Count = 1;								// Don't use multi-sampling.
+
+        
+        swapChainDesc.Format = c_backBufferFormat;				// This is the most common swap chain format.
+
+        
+        swapChainDesc.Stereo = false;
+
+
+        swapChainDesc.SampleDesc.Count = 1;								// Don't use multi-sampling.
 		swapChainDesc.SampleDesc.Quality = 0;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.BufferCount = 2;									// Use double-buffering to minimize latency.
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;	// All Windows Store apps must use this SwapEffect.
-		swapChainDesc.Flags = 0;
+
+        
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+
+
+        swapChainDesc.BufferCount = 2;									// Use double-buffering to minimize latency.
+
+
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // ghv: changed from SEQUENTIAL to DISCARD;
+
+        
+        swapChainDesc.Flags = 0;  // e.g. tearing...
+
+
 		swapChainDesc.Scaling = scaling;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+
 
 		// This sequence obtains the DXGI factory that was used to create the Direct3D device above.
 		ComPtr<IDXGIDevice3> dxgiDevice;
@@ -386,7 +428,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 	// Create a depth stencil view for use with 3D rendering if needed.
 
 	CD3D11_TEXTURE2D_DESC1 depthStencilDesc(
-		DXGI_FORMAT_D24_UNORM_S8_UINT, 
+		c_depthBufferFormat, 
 		lround(m_d3dRenderTargetSize.Width),
 		lround(m_d3dRenderTargetSize.Height),
 		1, // This depth stencil view has only one texture.
@@ -508,7 +550,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 	D2D1_BITMAP_PROPERTIES1 bitmapProperties = 
 		D2D1::BitmapProperties1(
 			D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-			D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+			D2D1::PixelFormat(c_backBufferFormat, D2D1_ALPHA_MODE_PREMULTIPLIED),
 			m_dpi,
 			m_dpi
 			);

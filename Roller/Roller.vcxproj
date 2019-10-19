@@ -258,7 +258,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="Content\CWS_WaveFrontReader.h" />
     <ClInclude Include="Content\ParallelTransportFrame.h" />
     <ClInclude Include="Content\Sphybox.h" />
@@ -272,7 +271,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="Content\ParallelTransportFrame.cpp" />
     <ClCompile Include="Content\Sphybox.cpp" />
     <ClCompile Include="Content\TexCoSphere.cpp" />

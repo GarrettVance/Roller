@@ -1,4 +1,11 @@
-﻿#pragma once
+﻿//          
+//          
+//  ghv 20191018 2037   
+//  File renamed to AlteredDevice.h after diverging from oem DeviceResources.h; 
+//          
+//          
+
+#pragma once
 
 namespace DX
 {
@@ -14,6 +21,13 @@ namespace DX
 	{
 	public:
 		DeviceResources();
+
+        static const DXGI_FORMAT c_backBufferFormat; 
+        static const DXGI_FORMAT c_depthBufferFormat; 
+        static const unsigned int c_targetSampleCount;
+
+
+
 		void SetWindow(Windows::UI::Core::CoreWindow^ window);
 		void SetLogicalSize(Windows::Foundation::Size logicalSize);
 		void SetCurrentOrientation(Windows::Graphics::Display::DisplayOrientations currentOrientation);
