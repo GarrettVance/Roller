@@ -33,7 +33,7 @@ namespace HvyDX
 
         bool LoadingComplete() { return sphybox_loadingComplete; }
 
-        void Render(const DirectX::XMFLOAT3& eyePos, const DirectX::XMMATRIX& viewMat, const DirectX::XMMATRIX& projMat);
+        void Render(const DirectX::XMFLOAT3& eyePos, const DirectX::XMMATRIX& viewMat, const DirectX::XMMATRIX& projMat, int pSmall);
 
     private:
         void CreateDepthStencilState();
@@ -61,6 +61,7 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11VertexShader>              sphybox_vertexShader;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState>           sphybox_rasterizerState;
         Microsoft::WRL::ComPtr<ID3D11PixelShader>               sphybox_pixelShader;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>               sphybox_pixelShaderNon;
 
 
         VHG_Sphybox_MVP_Struct                                  sphybox_MVP_ConbufData;

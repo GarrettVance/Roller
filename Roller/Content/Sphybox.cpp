@@ -41,7 +41,7 @@ Sphybox::Sphybox(const std::shared_ptr<DX::DeviceResources>& deviceResources)
 
 
 
-void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMATRIX& projMat )
+void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMATRIX& projMat, int pSmall )
 {
     XMMATRIX T = XMMatrixTranslation(eyePos.x, eyePos.y, eyePos.z);
 
@@ -80,8 +80,15 @@ void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMA
     context->VSSetShader(sphybox_vertexShader.Get(), nullptr, 0 );
     context->VSSetConstantBuffers1( 0, 1, sphybox_MVP_ConbufBuffer.GetAddressOf(), nullptr, nullptr );  // Slot zero;
 
+    if (pSmall > 0)
+    {
+        context->PSSetShader(sphybox_pixelShaderNon.Get(), nullptr, 0);
+    }
+    else
+    {
+        context->PSSetShader(sphybox_pixelShader.Get(), nullptr, 0);
+    }
 
-    context->PSSetShader(sphybox_pixelShader.Get(), nullptr, 0 );
     context->PSSetShaderResources(0, 1, sphybox_cube_srv.GetAddressOf());  // Slot zero;
     context->PSSetSamplers(0, 1, sphybox_cube_sampler_state.GetAddressOf());  // Slot zero;
 
@@ -198,6 +205,7 @@ void Sphybox::CreateDeviceDependentResources()
 
     auto loadVSTask = DX::ReadDataAsync(L"Sphybox_VertexShader.cso");
     auto loadPSTask = DX::ReadDataAsync(L"Sphybox_PixelShader.cso");
+    auto loadPSNonTask = DX::ReadDataAsync(L"SphyboxNon_PixelShader.cso");
 
 
     auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) 
@@ -258,9 +266,21 @@ void Sphybox::CreateDeviceDependentResources()
     });
     
 
+    auto createPSNonTask = loadPSNonTask.then([this](const std::vector<byte>& fileData) 
+    {
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreatePixelShader(
+                &fileData[0],
+                fileData.size(),
+                nullptr,
+                &sphybox_pixelShaderNon
+                )
+            );
+    });
+    
 
 
-    auto createCubeTask = (createPSTask && createVSTask).then([this] () 
+    auto createCubeTask = (createPSTask && createVSTask && createPSNonTask).then([this] () 
     {
         this->sphybox_sphere->LoadVertexBuffer(
             &sphybox_vertex_count,

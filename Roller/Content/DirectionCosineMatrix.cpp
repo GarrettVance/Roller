@@ -116,6 +116,7 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -10.f, 1.0f);
     cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -1.f, 1.0f);
     cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -4.f, 1.0f);  // 0, 0, -4, 1; 
+    cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, -4.f, 1.0f);  // 0, 0, -4, 1; 
 
 
     XMVECTOR cameraLookAt3rdPerson = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);
@@ -123,6 +124,9 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     cameraLookAt3rdPerson = XMVectorSet(80.f, 0.5f, 66.f, 1.0f);
     cameraLookAt3rdPerson = XMVectorSet(0.f, 0.5f, 36.f, 1.0f);
     cameraLookAt3rdPerson = XMVectorSet(0.f, 0.0f, 36.f, 1.0f); // 0, 0, 36, 1; 
+    cameraLookAt3rdPerson = XMVectorSet(40.f, 0.0f, 36.f, 1.0f); // 0, 0, 36, 1; 
+    cameraLookAt3rdPerson = XMVectorSet(20.f, 0.0f, 36.f, 1.0f); // better;
+    cameraLookAt3rdPerson = XMVectorSet(10.f, 0.0f, 36.f, 1.0f); //
 
 
     XMVECTOR worldUpDirection3rdPerson = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); 
@@ -205,16 +209,6 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
 
     DirectX::Keyboard::State        kb = kmi_keyboard->GetState();
-
-    if (kb.F5 && (e_View3rdPerson == true))
-    {
-        e_View3rdPerson = false;
-    }
-
-    if (kb.F6 && (e_View3rdPerson == false))
-    {
-        e_View3rdPerson = true;
-    }
 
     if (kb.F7 && (e_UsingMSAA == true))
     {
@@ -304,14 +298,14 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 #endif
 
 
-    const float xlat_x_3rdPerson = -10.f;  //  -20.f;  //  0.f;  //  12.f;
-    const float xlat_z_3rdPerson = 5.f;  // 15.f; //  0.f;
+    const float xlat_x_3rdPerson = 0.f;  //  -10.f; 
+    const float xlat_z_3rdPerson = 0.f;  //  5.f;
     XMMATRIX spacePodXlat_3rdPerson = XMMatrixTranslation(spaceCurvePos.x + xlat_x_3rdPerson, spaceCurvePos.y, spaceCurvePos.z + xlat_z_3rdPerson);
 
     XMMATRIX attitude_3rdPerson = XMMatrixRotationY(XM_PI / 2);
     attitude_3rdPerson = XMMatrixIdentity();
 
-    XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = attitude_3rdPerson * spacePodScaling3rdPerson * spacePodSpin * spacePodRotation * spacePodXlat_3rdPerson;
+    XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = spacePodScaling3rdPerson * spacePodSpin * spacePodRotation * spacePodXlat_3rdPerson * attitude_3rdPerson;
     XMStoreFloat4x4(&mandelpod_worldMatrix_3rdPerson_F4X4, mandelpod_worldMatrix_3rdPerson_MAT);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -326,7 +320,7 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
 
     XMMATRIX loft_3rdPerson_Translation = XMMatrixTranslation(xlat_x_3rdPerson, 0.f, xlat_z_3rdPerson);  
-    XMMATRIX loft_3rdPerson_WorldTransformation = attitude_3rdPerson * loft_3rdPerson_Translation; 
+    XMMATRIX loft_3rdPerson_WorldTransformation = loft_3rdPerson_Translation * attitude_3rdPerson; 
 
     XMMATRIX viewMatrix_1stPerson_MAT = XMLoadFloat4x4(&viewMatrix_1stPerson_F4X4);
     XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);

@@ -134,7 +134,7 @@ void Hvy3DScene::MSAA_Render()
 
     context->RSSetViewports(1, &m_deviceResources->GetViewport_Large());
 
-    this->e_sphybox->Render(m_vEye, viewMatrix_1stPerson_MAT, mProj); 
+    this->e_sphybox->Render(m_vEye, viewMatrix_1stPerson_MAT, mProj, -1); 
 
     context->RSSetState(mandelpod_rasterizerState.Get());
     RenderMandelPodViewportLarge();
@@ -153,7 +153,7 @@ void Hvy3DScene::MSAA_Render()
     context->RSSetViewports(1, &m_deviceResources->GetViewport_Small());
 
     XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);
-    this->e_sphybox->Render(m_vEye, viewMatrix_3rdPerson_MAT, mProj); 
+    this->e_sphybox->Render(m_vEye, viewMatrix_3rdPerson_MAT, mProj, 1); 
 
     this->m_PTF->RenderViewportSmall(); // Render the Lorenz Attractor loft;  
 

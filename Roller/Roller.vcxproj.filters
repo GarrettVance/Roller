@@ -173,5 +173,8 @@
     <FxCompile Include="HLSL\Sphybox_PixelShader.hlsl">
       <Filter>HLSL</Filter>
     </FxCompile>
+    <FxCompile Include="HLSL\SphyboxNon_PixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

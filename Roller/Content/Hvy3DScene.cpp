@@ -24,8 +24,7 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
     mandelpod_vertexCount(0),
     mandelpod_indexCount(0),
     e_UsingMSAA(true),
-    m_deviceResources(deviceResources), 
-    e_View3rdPerson(false)
+    m_deviceResources(deviceResources)
 {
     e_ZOffset = +36.f;   // TODO: remove;
 

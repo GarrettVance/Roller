@@ -136,7 +136,8 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_solid;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_wireframe;
 
-        bool                                                e_View3rdPerson; 
+        // retired bool                                                e_View3rdPerson; 
+
         float                                               e_ZOffset; // TODO: cleanup;
 
 
