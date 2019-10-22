@@ -71,7 +71,7 @@ ParallelTransportFrame::ParallelTransportFrame(const std::shared_ptr<DX::DeviceR
 
 
 
-
+/*
 void ParallelTransportFrame::Update(
     XMMATRIX        const&           p_ParallelTransportFrameWorldMatrix,
     XMMATRIX        const&           p_parentSceneViewMatrix,
@@ -99,13 +99,14 @@ void ParallelTransportFrame::Update(
         )
     );
 }
+*/
 
 
 
 
 
 
-void ParallelTransportFrame::Render()  
+void ParallelTransportFrame::RenderViewportSmall()  
 { 
     if (!ptf_loadingComplete)
     {
@@ -114,43 +115,14 @@ void ParallelTransportFrame::Render()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    context->UpdateSubresource1( ptf_WVP_Buffer.Get(),   0,  NULL, &ptf_WVP_Data,    0,   0,  0 );
-
-
-    context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_Buffer.GetAddressOf(), nullptr,  nullptr );
-
+    context->UpdateSubresource1( ptf_WVP_ViewportSmall_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportSmall_Data,    0,   0,  0 );
+    context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_ViewportSmall_Buffer.GetAddressOf(), nullptr,  nullptr );
 
     context->IASetInputLayout(ptf_inputLayout.Get());
-
-
     context->VSSetShader(ptf_vertexShader.Get(), nullptr, 0);
-  
-
     context->PSSetShader(ptf_pixelShader.Get(), nullptr, 0);
     context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
     context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
-
-
-
-
-#ifdef GHV_OPTION_DRAW_SPOKES
-    UINT vertex_buffer_1_stride = sizeof(VHG_Vertex_PosTex);
-    UINT vertex_buffer_1_offset = 0;
-    context->IASetVertexBuffers(
-        0,
-        1,
-        ptf_vertex_buffer_1_buffer.GetAddressOf(),
-        &vertex_buffer_1_stride,
-        &vertex_buffer_1_offset
-    );
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-    context->Draw(this->ptf_vertex_buffer_1_count, 0);
-#endif
-
-
-
-
-
     UINT vertex_buffer_2_stride = sizeof(VHG_Vertex_PosTex);
     UINT vertex_buffer_2_offset = 0;
     context->IASetVertexBuffers(
@@ -160,13 +132,43 @@ void ParallelTransportFrame::Render()
         &vertex_buffer_2_stride,
         &vertex_buffer_2_offset
     );
-
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     context->Draw( ptf_vertex_buffer_2_count, 0 );
 }  
-//  Closes ParallelTransportFrame::Render;  
 
+
+
+
+
+void ParallelTransportFrame::RenderViewportLarge()  
+{ 
+    if (!ptf_loadingComplete)
+    {
+        return;
+    }
+
+    auto context = m_deviceResources->GetD3DDeviceContext();
+
+    context->UpdateSubresource1( ptf_WVP_ViewportLarge_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportLarge_Data,    0,   0,  0 );
+    context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_ViewportLarge_Buffer.GetAddressOf(), nullptr,  nullptr );
+
+    context->IASetInputLayout(ptf_inputLayout.Get());
+    context->VSSetShader(ptf_vertexShader.Get(), nullptr, 0);
+    context->PSSetShader(ptf_pixelShader.Get(), nullptr, 0);
+    context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
+    context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
+    UINT vertex_buffer_2_stride = sizeof(VHG_Vertex_PosTex);
+    UINT vertex_buffer_2_offset = 0;
+    context->IASetVertexBuffers(
+        0,
+        1,
+        ptf_vertex_buffer_2_buffer.GetAddressOf(),
+        &vertex_buffer_2_stride,
+        &vertex_buffer_2_offset
+    );
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->Draw( ptf_vertex_buffer_2_count, 0 );
+}  
 
 
 
@@ -764,8 +766,16 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
                 m_deviceResources->GetD3DDevice()->CreateBuffer(
                     &constantBufferDesc,
                     nullptr,
-                    &ptf_WVP_Buffer )
+                    &ptf_WVP_ViewportSmall_Buffer )
             );
+
+            DX::ThrowIfFailed(
+                m_deviceResources->GetD3DDevice()->CreateBuffer(
+                    &constantBufferDesc,
+                    nullptr,
+                    &ptf_WVP_ViewportLarge_Buffer )
+            );
+
     });
 
 
@@ -793,7 +803,8 @@ void ParallelTransportFrame::ReleaseDeviceDependentResources()
 {
     ptf_loadingComplete = false; 
 
-    ptf_WVP_Buffer.Reset(); 
+    ptf_WVP_ViewportSmall_Buffer.Reset(); 
+    ptf_WVP_ViewportLarge_Buffer.Reset(); 
 
 }  
 //  Closes  ParallelTransportFrame::ReleaseDeviceDependentResources; 

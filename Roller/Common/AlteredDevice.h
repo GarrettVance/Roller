@@ -52,7 +52,21 @@ namespace DX
 		D3D_FEATURE_LEVEL			GetDeviceFeatureLevel() const			{ return m_d3dFeatureLevel; }
 		ID3D11RenderTargetView1*	GetBackBufferRenderTargetView() const	{ return m_d3dRenderTargetView.Get(); }
 		ID3D11DepthStencilView*		GetDepthStencilView() const				{ return m_d3dDepthStencilView.Get(); }
-		D3D11_VIEWPORT				GetScreenViewport() const				{ return m_screenViewport; }
+
+
+
+
+
+		// retired D3D11_VIEWPORT				GetScreenViewport() const				{ return m_screenViewport; }
+        D3D11_VIEWPORT				GetViewport_Large() const { return m_viewport_Large; }
+        D3D11_VIEWPORT				GetViewport_Small() const { return m_viewport_Small; }
+        void                        gv_CalcViewports();
+
+
+
+
+
+
 		DirectX::XMFLOAT4X4			GetOrientationTransform3D() const		{ return m_orientationTransform3D; }
 
 		// D2D Accessors.
@@ -80,7 +94,15 @@ namespace DX
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1>	m_d3dRenderTargetView;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>	m_d3dDepthStencilView;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gv_DepthStencilState; // ghv: for blending in Klein Quartic;
-		D3D11_VIEWPORT									m_screenViewport;
+
+
+		// retired D3D11_VIEWPORT									m_screenViewport;
+
+        D3D11_VIEWPORT									m_viewport_Large;
+        D3D11_VIEWPORT									m_viewport_Small;
+
+
+
 
 		// Direct2D drawing components.
 		Microsoft::WRL::ComPtr<ID2D1Factory3>		m_d2dFactory;

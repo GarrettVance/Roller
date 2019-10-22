@@ -88,7 +88,8 @@ namespace ScreenRotation
 
 // Constructor for DeviceResources.
 DX::DeviceResources::DeviceResources() :
-	m_screenViewport(),
+	m_viewport_Small(),
+	m_viewport_Large(),
 	m_d3dFeatureLevel(D3D_FEATURE_LEVEL_9_1),
 	m_d3dRenderTargetSize(),
 	m_outputSize(),
@@ -241,6 +242,68 @@ void DX::DeviceResources::CreateDeviceResources()
 			)
 		);
 }
+
+
+
+
+
+
+void DX::DeviceResources::gv_CalcViewports(void)
+{
+    float viewport_A_width = GetOutputSize().Width;
+    float viewport_A_height = GetOutputSize().Height;
+
+    m_viewport_Large = CD3D11_VIEWPORT(
+    );
+
+    this->m_viewport_Large = {
+        0.f,            
+        0.f,           
+        viewport_A_width,
+        viewport_A_height,
+        0.0f, 
+        1.f
+    }; 
+
+    // float ghv_viewport_B_height = 480.f;
+    // float ghv_viewport_B_width = 640.f;
+
+    float scaleFactorVP = 0.2f;  // Use 0.25f; 
+    float ghv_viewport_B_width = scaleFactorVP * viewport_A_width;
+    float ghv_viewport_B_height = scaleFactorVP * viewport_A_height;
+
+
+
+
+    float leftX_viewport_B = 0.f; //  10.f;  //  -20.f;
+    float leftY_viewport_B = 0.f;  //  130.f;  //  m_d3dRenderTargetSize.Height - ghv_viewport_B_height;
+
+    m_viewport_Small = {
+        leftX_viewport_B,           //  top_leftX;
+        leftY_viewport_B,  //  top_leftY;
+        ghv_viewport_B_width, 
+        ghv_viewport_B_height, 
+        0.f,
+        0.0f
+    };
+
+    D3D11_VIEWPORT ghv_viewports[2];
+    ghv_viewports[0] = this->m_viewport_Large;
+    ghv_viewports[1] = this->m_viewport_Small;
+
+    m_d3dContext->RSSetViewports(2, ghv_viewports);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // These resources need to be recreated every time the window size is changed.
 void DX::DeviceResources::CreateWindowSizeDependentResources() 
@@ -513,6 +576,9 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
     
 
 
+
+
+#if 3 == 4
 	// Set the 3D rendering viewport to target the entire window.
 	m_screenViewport = CD3D11_VIEWPORT(
 		0.0f,
@@ -522,6 +588,14 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 		);
 
 	m_d3dContext->RSSetViewports(1, &m_screenViewport);
+#endif 
+
+
+    gv_CalcViewports();
+
+
+
+
 
 	// Create a Direct2D target bitmap associated with the
 	// swap chain back buffer and set it as the current target.

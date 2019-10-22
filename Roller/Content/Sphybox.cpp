@@ -61,10 +61,10 @@ void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMA
     context->UpdateSubresource1(sphybox_MVP_ConbufBuffer.Get(), 0, NULL, &sphybox_MVP_ConbufData, 0, 0, 0);
 
 
-    context->OMSetDepthStencilState(ghv_DepthStencilState.Get(), 0);
+    // context->OMSetDepthStencilState(ghv_DepthStencilState.Get(), 0);
 
 
-    context->RSSetState(sphybox_rasterizerState.Get()); 
+    // context->RSSetState(sphybox_rasterizerState.Get()); 
     UINT stride = sizeof(XMFLOAT3);
     UINT offset = 0;
     context->IASetVertexBuffers(0, 1, sphybox_sphere->tcs_vertex_buffer.GetAddressOf(), &stride, &offset);

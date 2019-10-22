@@ -280,7 +280,15 @@ void Hvy3DScene::CreateDeviceDependentResources()
             m_deviceResources->GetD3DDevice()->CreateBuffer(
                 &constantBufferDesc,
                 nullptr,
-                &mandelpod_transformBuffer
+                &mandelpod_1stPerson_transformBuffer
+                )
+            );
+
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreateBuffer(
+                &constantBufferDesc,
+                nullptr,
+                &mandelpod_3rdPerson_transformBuffer
                 )
             );
     });
@@ -309,7 +317,8 @@ void Hvy3DScene::ReleaseDeviceDependentResources()
     mandelpod_vertexShader.Reset();
     mandelpod_waveFrontInputLayoutTNB.Reset();
     mandelpod_pixelShader.Reset();
-    mandelpod_transformBuffer.Reset();
+    mandelpod_1stPerson_transformBuffer.Reset();
+    mandelpod_3rdPerson_transformBuffer.Reset();
     mandelpod_vertexBuffer.Reset();
     mandelpod_indexBuffer.Reset();
 }

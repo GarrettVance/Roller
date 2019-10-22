@@ -120,40 +120,44 @@ void Hvy3DScene::MSAA_Render()
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //    
-    //  Render the mandelpod: 
+    //  Render to the large viewport: 
     //    
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    context->RSSetState(mandelpod_rasterizerState.Get());
+    ID3D11Device3 * devic = m_deviceResources->GetD3DDevice();
 
-    RenderMandelPod();
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //    
-    //  Render the spherical skybox: 
-    //    
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    context->RSSetState(e_rasterizer_state_solid.Get());
-
-    XMMATRIX mView = XMLoadFloat4x4(&m_mView);
+    XMMATRIX viewMatrix_1stPerson_MAT = XMLoadFloat4x4(&viewMatrix_1stPerson_F4X4);
     XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
 
-    this->e_sphybox->Render(m_vEye, mView, mProj); 
+    // context->RSSetState(e_rasterizer_state_solid.Get());
 
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //    
-    //  Render the Lorenz Attractor loft: 
-    //    
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
+    context->RSSetViewports(1, &m_deviceResources->GetViewport_Large());
+
+    this->e_sphybox->Render(m_vEye, viewMatrix_1stPerson_MAT, mProj); 
+
+    context->RSSetState(mandelpod_rasterizerState.Get());
+    RenderMandelPodViewportLarge();
     context->RSSetState(e_rasterizer_state_solid.Get());
 
-    this->m_PTF->Render(); // Render the Lorenz Attractor loft;  
+    this->m_PTF->RenderViewportLarge(); // Render the Lorenz Attractor loft;  
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //    
+    //  Render to the small viewport: 
+    //    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    context->RSSetViewports(1, &m_deviceResources->GetViewport_Small());
+
+    XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);
+    this->e_sphybox->Render(m_vEye, viewMatrix_3rdPerson_MAT, mProj); 
+
+    this->m_PTF->RenderViewportSmall(); // Render the Lorenz Attractor loft;  
+
+    RenderMandelPodViewportSmall();
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

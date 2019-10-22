@@ -77,9 +77,15 @@ bool RollerMain::Render()
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
+
+#ifdef GHV_OPTION_REVERT
+    // TODO: 
 	// Reset the viewport to target the whole screen.
 	auto viewport = m_deviceResources->GetScreenViewport();
 	context->RSSetViewports(1, &viewport);
+#endif
+
+
 
 	// Reset render targets to the screen.
 	ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };

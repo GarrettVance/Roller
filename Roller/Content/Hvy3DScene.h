@@ -96,7 +96,8 @@ namespace HvyDX
 
         void Render();
 
-        void RenderMandelPod(); 
+        void RenderMandelPodViewportSmall(); 
+        void RenderMandelPodViewportLarge(); 
 
 
     private:
@@ -157,15 +158,22 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          mandelpod_environmentSampler;
         bool                                                mandelpod_loadingComplete;
 
-        VHG_conbuf_MVPA_struct                              mandelpod_transformData;
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_transformBuffer;
+        VHG_conbuf_MVPA_struct                              mandelpod_1stPerson_transformData;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_1stPerson_transformBuffer;
+
+        VHG_conbuf_MVPA_struct                              mandelpod_3rdPerson_transformData;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_3rdPerson_transformBuffer;
 
 
+        DirectX::XMFLOAT4X4                                 mandelpod_worldMatrix_1stPerson_F4X4; 
+        DirectX::XMFLOAT4X4                                 mandelpod_worldMatrix_3rdPerson_F4X4; 
 
-        DirectX::XMFLOAT4X4                                 mandelpod_worldMatrix_F4X4; 
+        // Camera attributes: 
+
         DirectX::XMFLOAT3                                   m_vEye; 
         DirectX::XMFLOAT3                                   m_vLookAt; // LookAt position; 
-        DirectX::XMFLOAT4X4                                 m_mView; // View matrix;
+        DirectX::XMFLOAT4X4                                 viewMatrix_1stPerson_F4X4;
+        DirectX::XMFLOAT4X4                                 viewMatrix_3rdPerson_F4X4;
         DirectX::XMFLOAT4X4                                 m_ProjectionMatrix;
 
 

@@ -71,17 +71,18 @@ namespace HvyDX
         void CreateDeviceDependentResources();
         void ReleaseDeviceDependentResources();
 
+        /*
         void Update(
             DirectX::XMMATRIX        const&           p_ParallelTransportFrameWorldMatrix,
             DirectX::XMMATRIX        const&           p_parentSceneViewMatrix,
             DirectX::XMMATRIX        const&           p_parentSceneProjectionMatrix
         );
+        */
 
-        void Render();
+        void RenderViewportSmall();
+        void RenderViewportLarge();
 
         bool            LoadingComplete() { return ptf_loadingComplete; }
-
-        // retire std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_axons; }
 
 
         void Create_Input_Layout(
@@ -103,6 +104,10 @@ namespace HvyDX
 
         std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
 
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_ViewportSmall_Buffer;
+        VHG_ConBuf_MVP_Struct                               ptf_WVP_ViewportSmall_Data;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_ViewportLarge_Buffer;
+        VHG_ConBuf_MVP_Struct                               ptf_WVP_ViewportLarge_Data;
 
 
     private: 
@@ -120,8 +125,8 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_vertex_buffer_2_buffer;
         uint32_t                                            ptf_vertex_buffer_2_count;
 
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_Buffer;
-        VHG_ConBuf_MVP_Struct                               ptf_WVP_Data;
+
+
         Microsoft::WRL::ComPtr<ID3D11VertexShader>          ptf_vertexShader;
         
 

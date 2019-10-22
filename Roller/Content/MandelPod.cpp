@@ -54,73 +54,153 @@ void Hvy3DScene::DrawIndexedPerMaterial(void)
 
 
 
-void Hvy3DScene::RenderMandelPod()
+
+
+
+
+
+void Hvy3DScene::RenderMandelPodViewportSmall()
 {
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    XMMATRIX mView = XMLoadFloat4x4(&m_mView);
+    XMMATRIX mandelpod_worldMatrix_1stPerson_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_1stPerson_F4X4);
+    XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_3rdPerson_F4X4);
+
+    XMMATRIX viewMatrix_1stPerson_MAT = XMLoadFloat4x4(&viewMatrix_1stPerson_F4X4);
+    XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);
+
     XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
-    XMMATRIX mandelpod_worldMatrix_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_F4X4);
 
-    DirectX::XMStoreFloat4x4(
-        &mandelpod_transformData.trxWVP, 
-        XMMatrixTranspose(mandelpod_worldMatrix_MAT * mView * mProj) 
-    );
+    XMMATRIX inverseTransposeWorld_1stPerson = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_1stPerson_MAT));
+    XMMATRIX inverseTransposeWorld_3rdPerson = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_3rdPerson_MAT));
 
-    DirectX::XMStoreFloat4x4(
-        &mandelpod_transformData.trxWorld, 
-        XMMatrixTranspose(mandelpod_worldMatrix_MAT)
-    );
+    XMMATRIX inverseView_1stPerson = XMMatrixInverse(nullptr, viewMatrix_1stPerson_MAT);
+    XMMATRIX inverseView_3rdPerson = XMMatrixInverse(nullptr, viewMatrix_3rdPerson_MAT);
 
-    //  matrix for inverse transpose of World transformation: 
 
-    XMMATRIX inverseTransposeWorld = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_MAT)); 
 
-    DirectX::XMStoreFloat4x4(
-        &mandelpod_transformData.trxInvTposeWorld, 
-        XMMatrixTranspose(inverseTransposeWorld)
-    );
 
-    //  matrix for inverse of View transformation: 
 
-    XMMATRIX inverseView = XMMatrixInverse(nullptr, mView); 
 
-    DirectX::XMStoreFloat4x4(
-        &mandelpod_transformData.trxInverseView, 
-        XMMatrixTranspose(inverseView)
-    );
 
-    context->UpdateSubresource1( mandelpod_transformBuffer.Get(), 0, NULL, &mandelpod_transformData, 0, 0, 0 );
+    {
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_3rdPerson_transformData.trxWVP,
+            XMMatrixTranspose(mandelpod_worldMatrix_3rdPerson_MAT * viewMatrix_3rdPerson_MAT * mProj)
+        );
 
-    //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-    //          
-    //  Render the mandelpod: 
-    //      
-    //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_3rdPerson_transformData.trxWorld,
+            XMMatrixTranspose(mandelpod_worldMatrix_3rdPerson_MAT)
+        );
 
-    UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
-    UINT vb_offset = 0;
-    context->IASetVertexBuffers( 0, 1, mandelpod_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset );
-    context->IASetIndexBuffer( mandelpod_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->IASetInputLayout(mandelpod_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_3rdPerson_transformData.trxInvTposeWorld,
+            XMMatrixTranspose(inverseTransposeWorld_3rdPerson)
+        );
 
-    context->VSSetShader( mandelpod_vertexShader.Get(), nullptr, 0 );
-    context->VSSetConstantBuffers1( 0, 1, mandelpod_transformBuffer.GetAddressOf(), nullptr, nullptr );
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_3rdPerson_transformData.trxInverseView,
+            XMMatrixTranspose(inverseView_3rdPerson)
+        );
 
-    context->PSSetShader(mandelpod_pixelShader.Get(), nullptr, 0 );
+        context->UpdateSubresource1(mandelpod_3rdPerson_transformBuffer.Get(), 0, NULL, &mandelpod_3rdPerson_transformData, 0, 0, 0);
 
-    //   Must bind all three samplers for Phong Bump shading: 
-
-    ID3D11SamplerState * arrSamplers[3] = { 
-        mandelpod_colorSampler.Get(), 
-        mandelpod_normalSampler.Get(), 
-        mandelpod_environmentSampler.Get() 
-    }; 
-    context->PSSetSamplers(0, 3, arrSamplers);
-
-    this->DrawIndexedPerMaterial();   
+        UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
+        UINT vb_offset = 0;
+        context->IASetVertexBuffers(0, 1, mandelpod_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset);
+        context->IASetIndexBuffer(mandelpod_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        context->IASetInputLayout(mandelpod_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
+        context->VSSetShader(mandelpod_vertexShader.Get(), nullptr, 0);
+        context->VSSetConstantBuffers1(0, 1, mandelpod_3rdPerson_transformBuffer.GetAddressOf(), nullptr, nullptr);
+        context->PSSetShader(mandelpod_pixelShader.Get(), nullptr, 0);
+        ID3D11SamplerState * arrSamplers[3] = { //   Must bind all three samplers for Phong Bump shading: 
+            mandelpod_colorSampler.Get(),
+            mandelpod_normalSampler.Get(),
+            mandelpod_environmentSampler.Get()
+        };
+        context->PSSetSamplers(0, 3, arrSamplers);
+        this->DrawIndexedPerMaterial();
+    }
 }
+
+
+
+void Hvy3DScene::RenderMandelPodViewportLarge()
+{
+    auto context = m_deviceResources->GetD3DDeviceContext();
+
+    XMMATRIX mandelpod_worldMatrix_1stPerson_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_1stPerson_F4X4);
+    // XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_3rdPerson_F4X4);
+
+    XMMATRIX viewMatrix_1stPerson_MAT = XMLoadFloat4x4(&viewMatrix_1stPerson_F4X4);
+    // XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);
+
+    XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
+
+    XMMATRIX inverseTransposeWorld_1stPerson = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_1stPerson_MAT));
+    // XMMATRIX inverseTransposeWorld_3rdPerson = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_3rdPerson_MAT));
+
+    XMMATRIX inverseView_1stPerson = XMMatrixInverse(nullptr, viewMatrix_1stPerson_MAT);
+    // XMMATRIX inverseView_3rdPerson = XMMatrixInverse(nullptr, viewMatrix_3rdPerson_MAT);
+
+    {
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_1stPerson_transformData.trxWVP,
+            XMMatrixTranspose(mandelpod_worldMatrix_1stPerson_MAT * viewMatrix_1stPerson_MAT * mProj)
+        );
+
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_1stPerson_transformData.trxWorld,
+            XMMatrixTranspose(mandelpod_worldMatrix_1stPerson_MAT)
+        );
+
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_1stPerson_transformData.trxInvTposeWorld,
+            XMMatrixTranspose(inverseTransposeWorld_1stPerson)
+        );
+
+        DirectX::XMStoreFloat4x4(
+            &mandelpod_1stPerson_transformData.trxInverseView,
+            XMMatrixTranspose(inverseView_1stPerson)
+        );
+
+        context->UpdateSubresource1(mandelpod_1stPerson_transformBuffer.Get(), 0, NULL, &mandelpod_1stPerson_transformData, 0, 0, 0);
+
+        UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
+        UINT vb_offset = 0;
+        context->IASetVertexBuffers(0, 1, mandelpod_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset);
+        context->IASetIndexBuffer(mandelpod_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        context->IASetInputLayout(mandelpod_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
+        context->VSSetShader(mandelpod_vertexShader.Get(), nullptr, 0);
+        context->VSSetConstantBuffers1(0, 1, mandelpod_1stPerson_transformBuffer.GetAddressOf(), nullptr, nullptr);
+        context->PSSetShader(mandelpod_pixelShader.Get(), nullptr, 0);
+        ID3D11SamplerState * arrSamplers[3] = { //   Must bind all three samplers for Phong Bump shading: 
+            mandelpod_colorSampler.Get(),
+            mandelpod_normalSampler.Get(),
+            mandelpod_environmentSampler.Get()
+        };
+        context->PSSetSamplers(0, 3, arrSamplers);
+        this->DrawIndexedPerMaterial();
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

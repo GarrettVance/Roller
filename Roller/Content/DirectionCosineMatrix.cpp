@@ -10,6 +10,7 @@
 
 #include "pch.h"
 #include "Hvy3DScene.h"
+#include "ParallelTransportFrame.h"
 #include "..\Common\DirectXHelper.h"
 
 using namespace HvyDX;
@@ -107,11 +108,32 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     DirectX::XMMATRIX const& p_RotationMatrix
 )
 {
+    XMVECTOR cameraPosition3rdPerson = XMVectorSet(40.f, 2.f, 60.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(40.f, 2.f, 30.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(0.f, 2.f, 30.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, 60.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(-40.f, 0.f, 60.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -10.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -1.f, 1.0f);
+    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -4.f, 1.0f);  // 0, 0, -4, 1; 
+
+
+    XMVECTOR cameraLookAt3rdPerson = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);
+    cameraLookAt3rdPerson = XMVectorSet(40.f, 0.5f, 66.f, 1.0f);
+    cameraLookAt3rdPerson = XMVectorSet(80.f, 0.5f, 66.f, 1.0f);
+    cameraLookAt3rdPerson = XMVectorSet(0.f, 0.5f, 36.f, 1.0f);
+    cameraLookAt3rdPerson = XMVectorSet(0.f, 0.0f, 36.f, 1.0f); // 0, 0, 36, 1; 
+
+
+    XMVECTOR worldUpDirection3rdPerson = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); 
+
+    XMMATRIX viewMatrix_3rdPerson_MAT = XMMatrixLookAtLH(cameraPosition3rdPerson, cameraLookAt3rdPerson, worldUpDirection3rdPerson); // Left-handed;
+    XMStoreFloat4x4(&viewMatrix_3rdPerson_F4X4, viewMatrix_3rdPerson_MAT);
+
     //  TODO:  use new XMVECTOR member transported_normal: 
 
-
     //  
-    //  The curve Normal point inward towards the center of curvature, 
+    //  The curve Normal points inward towards the center of curvature, 
     //  so values of cameraNormalDistance must be chosen < 0 (i.e. negative). 
     //      
     float cameraNormalDistance = -2.f;
@@ -152,18 +174,10 @@ void Hvy3DScene::CalculateViewMatrix_Following(
 
     XMVECTOR worldUpDirection = XMVectorNegate(normalizedNormalXMV);
 
-    if (e_View3rdPerson == true)
-    {
-        cameraPosition = XMVectorSet(40.f, 2.f, 60.f, 1.0f);
-        cameraLookAt = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);
-        worldUpDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); 
-    }
-
-    if (!XMVector3Equal(cameraLookAt, XMVectorZero()))
-    {
-        XMMATRIX mView = XMMatrixLookAtLH(cameraPosition, cameraLookAt, worldUpDirection); // Left-handed;
-        XMStoreFloat4x4(&m_mView, mView);
-    }
+    //  if (!XMVector3Equal(cameraLookAt, XMVectorZero()))
+    
+    XMMATRIX viewMatrix_1stPerson_MAT = XMMatrixLookAtLH(cameraPosition, cameraLookAt, worldUpDirection); // Left-handed;
+    XMStoreFloat4x4(&viewMatrix_1stPerson_F4X4, viewMatrix_1stPerson_MAT);
 }
 
 
@@ -241,7 +255,6 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
         spaceCurveNormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_normal; 
         spaceCurveBinormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_binormal; 
 
-        // if (idxUpdateCall % 4 == 0)
         if (fElapsedTime > 0.03f)
         {
             time_prior = time_now;
@@ -254,69 +267,115 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
     XMMATRIX mCameraRot = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
 
-    CalculateViewMatrix_Following(
-        spaceCurvePos,
-        spaceCurveTangent,
-        spaceCurveNormal,
-        mCameraRot
-    ); 
+    CalculateViewMatrix_Following( spaceCurvePos, spaceCurveTangent, spaceCurveNormal, mCameraRot ); 
 
     //      
     //  World Transformation of the Space Pod (aka MandelPod)
-    //  Apply scaling to the Space Pod prior to translation: 
     //          
-    float s5 = (e_View3rdPerson == true) ? 4.f : 3.f;
-#ifdef _DEBUG
-    //  For _DEBUG builds, the MandelPod is replaced 
-    //  by the shiny sphere, which requires more drastic scaling: 
-    s5 = 0.8f;
-#endif
-    XMMATRIX spacePodScaling = XMMatrixScaling(s5, s5, s5);  
-
 #ifdef _DEBUG
     float accumulatedRadians = (float)timer.GetTotalSeconds() * XMConvertToRadians(45.f);  
     float properRadians = static_cast<float>(fmod(accumulatedRadians, DirectX::XM_2PI)); 
-    spacePodScaling = XMMatrixScaling(s5, s5, s5) * XMMatrixRotationX(properRadians);  
+    XMMATRIX spacePodSpin = XMMatrixRotationX(properRadians);  
+#else
+    XMMATRIX spacePodSpin = XMMatrixIdentity();
 #endif
-
-    XMMATRIX spacePodXlat = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ZOffset);
 
     XMMATRIX spacePodRotation = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
 
-    XMMATRIX mandelpod_worldMatrix_MAT = spacePodScaling * spacePodRotation * spacePodXlat;
-    XMStoreFloat4x4(&mandelpod_worldMatrix_F4X4, mandelpod_worldMatrix_MAT);
 
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    XMMATRIX spacePodXlat_1stPerson = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ZOffset);
 
-#ifdef GHV_OPTION_LATER
-    // TODO: remove CalculateViewMatrix(spaceCurvePos, spaceCurveTangent, spaceCurveNormal, cameraRotation);
+
+#ifdef _DEBUG
+    XMMATRIX spacePodScaling1stPerson = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+#else
+    XMMATRIX spacePodScaling1stPerson = XMMatrixScaling(4.f, 4.f, 4.f);
 #endif
 
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    XMMATRIX mandelpod_worldMatrix_1stPerson_MAT = spacePodScaling1stPerson * spacePodSpin * spacePodRotation * spacePodXlat_1stPerson;
+    XMStoreFloat4x4(&mandelpod_worldMatrix_1stPerson_F4X4, mandelpod_worldMatrix_1stPerson_MAT);
 
-    //      
+
+
+#ifdef _DEBUG
+    XMMATRIX spacePodScaling3rdPerson = XMMatrixScaling(1.6f, 1.6f, 1.6f);
+#else
+    XMMATRIX spacePodScaling3rdPerson = XMMatrixScaling(5.f, 5.f, 5.f); 
+#endif
+
+
+    const float xlat_x_3rdPerson = -10.f;  //  -20.f;  //  0.f;  //  12.f;
+    const float xlat_z_3rdPerson = 5.f;  // 15.f; //  0.f;
+    XMMATRIX spacePodXlat_3rdPerson = XMMatrixTranslation(spaceCurvePos.x + xlat_x_3rdPerson, spaceCurvePos.y, spaceCurvePos.z + xlat_z_3rdPerson);
+
+    XMMATRIX attitude_3rdPerson = XMMatrixRotationY(XM_PI / 2);
+    attitude_3rdPerson = XMMatrixIdentity();
+
+    XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = attitude_3rdPerson * spacePodScaling3rdPerson * spacePodSpin * spacePodRotation * spacePodXlat_3rdPerson;
+    XMStoreFloat4x4(&mandelpod_worldMatrix_3rdPerson_F4X4, mandelpod_worldMatrix_3rdPerson_MAT);
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //  World Transformation of the Lorenz Attractor: 
     //   
     //  Need to push the Lorenz Attractor deeper into the scene's background. 
     //  This is accomplished by using e_ZOffset. 
     //      
 
-    XMMATRIX translation_mx = XMMatrixTranslation(-2.f, 0.f, e_ZOffset);  
-    XMMATRIX lorenz_scaling = XMMatrixScaling(1.f, 1.f, 1.f);
+    XMMATRIX loft_1stPerson_Translation = XMMatrixTranslation(-2.f, 0.f, e_ZOffset);  
+    XMMATRIX loft_1stPerson_WorldTransformation = loft_1stPerson_Translation;
 
-    XMMATRIX lorenzAttractorWorldTransformation = lorenz_scaling * translation_mx;
 
-    if (this->m_PTF->LoadingComplete())
-    {
-        XMMATRIX mView = XMLoadFloat4x4(&m_mView);
-        XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
+    XMMATRIX loft_3rdPerson_Translation = XMMatrixTranslation(xlat_x_3rdPerson, 0.f, xlat_z_3rdPerson);  
+    XMMATRIX loft_3rdPerson_WorldTransformation = attitude_3rdPerson * loft_3rdPerson_Translation; 
 
-        this->m_PTF->Update(
-            lorenzAttractorWorldTransformation,
-            mView,
-            mProj 
-        );
-    }
+    XMMATRIX viewMatrix_1stPerson_MAT = XMLoadFloat4x4(&viewMatrix_1stPerson_F4X4);
+    XMMATRIX viewMatrix_3rdPerson_MAT = XMLoadFloat4x4(&viewMatrix_3rdPerson_F4X4);
+
+    XMMATRIX projectionMatrix_MAT = XMLoadFloat4x4(&m_ProjectionMatrix);
+
+
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportSmall_Data.model,
+        XMMatrixTranspose(
+            loft_3rdPerson_WorldTransformation  // 3rdPerson is rendered in small viewport;
+        )
+    );
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportSmall_Data.view,
+        XMMatrixTranspose(
+            viewMatrix_3rdPerson_MAT
+        )
+    );
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportSmall_Data.projection,
+        XMMatrixTranspose(
+            projectionMatrix_MAT
+        )
+    );
+
+
+
+
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportLarge_Data.model,
+        XMMatrixTranspose(
+            loft_1stPerson_WorldTransformation // 1stPerson is rendered in the LARGE viewport;
+        )
+    );
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportLarge_Data.view,
+        XMMatrixTranspose(
+            viewMatrix_1stPerson_MAT
+        )
+    );
+    DirectX::XMStoreFloat4x4(
+        &m_PTF->ptf_WVP_ViewportLarge_Data.projection,
+        XMMatrixTranspose(
+            projectionMatrix_MAT
+        )
+    );
+
+
 }
 
 
