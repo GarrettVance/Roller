@@ -73,6 +73,9 @@
     <ClCompile Include="Common\AlteredDevice.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Content\DirectionCosineMatrix.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -111,6 +114,9 @@
       <Filter>Assets</Filter>
     </Image>
     <Image Include="Assets\2_dds_color_black_dawn.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\1_dds_track.dds">
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>

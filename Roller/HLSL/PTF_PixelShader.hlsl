@@ -8,12 +8,15 @@
 //              
 //          
 
+Texture2D           trackTexture;
+SamplerState        trackSampler;
+
 
 struct GEO_IN
 {
-    float4     pos         : SV_POSITION;
-    float2     texco       : TEXCOORD0;
-    float4     worldpos    : TEXCOORD1;
+    float4     pos          : SV_POSITION;
+    float2     texco        : TEXCOORD0;
+    float4     color        : COLOR0;
 };
 
 
@@ -75,31 +78,12 @@ float4 color_HSL_to_RGB(float h, float s, float l)
 
 float4       ps_main(GEO_IN      input) : SV_TARGET
 { 
-    float  norm_squared = (input.worldpos.x * input.worldpos.x) 
-    + (input.worldpos.y * input.worldpos.y) 
-    + (input.worldpos.z * input.worldpos.z);
+    // float hsl_lum = 0.5f; 
+    // float hsl_sat = 0.9f; 
 
-    float abs_radius = sqrt(norm_squared);
+    float4 sampledTexture = trackTexture.Sample(trackSampler, input.texco); 
 
-    float pct_x = abs(input.worldpos.x)/abs_radius;
-    float pct_y = abs(input.worldpos.y)/abs_radius;
-    float pct_z = abs(input.worldpos.z)/abs_radius;
-
-    // float max_radius = 27.f; // too much red;
-
-    float max_radius = 67.f;
-
-    // max_radius = 122.f; // too much yellow;
-
-
-    float relative_radius = (abs_radius < max_radius) ? abs_radius / max_radius : 1.f; 
-
-    float hsl_lum = 0.5f; 
-    float hsl_sat = 0.9f; 
-    
-    //  float4 v_rgba = color_HSL_to_RGB(relative_radius + 0.01f, hsl_sat, hsl_lum);
-
-    return color_HSL_to_RGB(relative_radius + 0.01f, hsl_sat, hsl_lum);
+    return input.color * sampledTexture;
 }
 
 

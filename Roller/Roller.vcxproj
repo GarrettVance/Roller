@@ -243,6 +243,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Image Include="Assets\1_dds_track.dds" />
     <Image Include="Assets\2_dds_bump_type_dawning.dds" />
     <Image Include="Assets\2_dds_color_black_dawn.dds" />
     <Image Include="Assets\2_dds_color_type_dawning.dds" />
@@ -273,6 +274,7 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Common\AlteredDevice.cpp" />
+    <ClCompile Include="Content\DirectionCosineMatrix.cpp" />
     <ClCompile Include="Content\ParallelTransportFrame.cpp" />
     <ClCompile Include="Content\Sphybox.cpp" />
     <ClCompile Include="Content\TexCoSphere.cpp" />

@@ -24,7 +24,7 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
     m_indexCount(0),
     e_UsingMSAA(true),
     m_deviceResources(deviceResources), 
-    e_ViewMatrixFixed(true)
+    e_ViewMatrixFixed(false)
 {
     e_ChiralityZOffset = +36.f;   // TODO: remove;
 
@@ -55,14 +55,27 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
 {
     Size outputSize = m_deviceResources->GetOutputSize();
     float aspectRatio = outputSize.Width / outputSize.Height;
-    float fovAngleY = 70.0f * XM_PI / 180.0f;
 
 
+
+    float fovAngleY = 85.0f * XM_PI / 180.0f;
+
+
+    /*
     if (aspectRatio < 1.0f)
     {
         fovAngleY *= 2.0f;
     }
-    e_xmmatrix_projection_trx = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.1f, 1000.0f ); // Chirality Left-handed; 
+    */
+
+
+
+
+    XMMATRIX projMat = XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, 0.01f, 100.0f ); // Chirality Left-handed; 
+    XMStoreFloat4x4(&m_ProjectionMatrix, projMat);
+
+
+
 
     // Allocate all memory resources that change on a window SizeChanged event:
 
@@ -133,409 +146,6 @@ void Hvy3DScene::CreateWindowSizeDependentResources()
         e_msaaDepthStencilView.ReleaseAndGetAddressOf()
     ));
 }
-
-
-
-
-
-
-DirectX::XMMATRIX Hvy3DScene::DirectionCosineMatrix(
-    DirectX::XMFLOAT3 p_Tangent, 
-    DirectX::XMFLOAT3 p_Normal, 
-    DirectX::XMFLOAT3 p_Binormal
-)
-{
-    //  The Space Curve of the Lorenz Attractor has, at any instant, 
-    //  a local frame with orthonormal basis 
-    //  (curveTangentHat, curveNormalHat, curveBinormalHat); 
-
-    XMVECTOR curveTangentHat = XMVectorNegate(  //  signum;
-        XMVector3Normalize(
-            XMVectorSet(p_Tangent.x, p_Tangent.y, p_Tangent.z, 0.f)
-        )
-    ); 
-
-
-
-    XMVECTOR curveNormalHat = XMVector3Normalize(
-        XMVectorSet(p_Normal.x, p_Normal.y, p_Normal.z, 0.f)
-    );
-    curveNormalHat = XMVectorNegate(curveNormalHat); 
-
-
-
-    XMVECTOR curveBinormalHat = XMVector3Normalize(
-        XMVectorSet(p_Binormal.x, p_Binormal.y, p_Binormal.z, 0.f)
-    );
-
-
-    //  World Space has an orthonormal basis given by 
-    //  the following three unit vectors: 
-
-    XMVECTOR worldXHat = XMVectorSet(1.f, 0.f, 0.f, 0.f); 
-    XMVECTOR worldYHat = XMVectorSet(0.f, 1.f, 0.f, 0.f); 
-    XMVECTOR worldZHat = XMVectorSet(0.f, 0.f, 1.f, 0.f); 
-
-    //  
-    //  The World-to-Curve Rotation Matrix: 
-    // 
-
-    DirectX::XMFLOAT3X3     rotW2C;  //  W2C = World-to-Curve Transformation;
-
-    rotW2C._11 = XMVectorGetX(XMVector3Dot(curveTangentHat, worldXHat)); 
-    rotW2C._12 = XMVectorGetX(XMVector3Dot(curveTangentHat, worldYHat)); 
-    rotW2C._13 = XMVectorGetX(XMVector3Dot(curveTangentHat, worldZHat)); 
-
-    rotW2C._21 = XMVectorGetX(XMVector3Dot(curveNormalHat, worldXHat)); 
-    rotW2C._22 = XMVectorGetX(XMVector3Dot(curveNormalHat, worldYHat)); 
-    rotW2C._23 = XMVectorGetX(XMVector3Dot(curveNormalHat, worldZHat)); 
-
-    rotW2C._31 = XMVectorGetX(XMVector3Dot(curveBinormalHat, worldXHat)); 
-    rotW2C._32 = XMVectorGetX(XMVector3Dot(curveBinormalHat, worldYHat)); 
-    rotW2C._33 = XMVectorGetX(XMVector3Dot(curveBinormalHat, worldZHat)); 
-
-    DirectX::XMMATRIX     rotateWorldToCurve = XMLoadFloat3x3(&rotW2C);  
-
-    return rotateWorldToCurve;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-void Hvy3DScene::CalculateViewMatrix(
-    DirectX::XMFLOAT3 const& p_Position, 
-    DirectX::XMFLOAT3 const& p_Tangent, 
-    DirectX::XMFLOAT3 const& p_Normal
-)
-{
-    XMVECTOR cameraWorldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // The "up" direction in World Coordinates;
-
-    XMVECTOR effectiveUp; 
-
-    XMVECTOR cameraLookAt;  
-
-
-    if (e_ViewMatrixFixed == true)
-    {
-        // cameraPosition = XMVectorSet(40.f, 2.f, 28.f, 1.0f); // Use 40.f, 2.f, 28.f, 1.f;
-
-        // better: cameraPosition = XMVectorSet(40.f, 2.f, 58.f, 1.0f); // Use 40.f, 2.f, 58.f, 1.f;  // better!
-
-        cameraPosition = XMVectorSet(40.f, 2.f, 60.f, 1.0f); // Use 40.f, 2.f, 98.f, 1.f;  
-
-        cameraLookAt = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);  // Use 0.f, 0.5f, 46.f, 1.f;
-
-        effectiveUp = cameraWorldUp;
-    }
-    else
-    {
-        XMVECTOR translatedXMV = XMVectorSet(p_Position.x - 2.f, p_Position.y, p_Position.z + e_ChiralityZOffset, 1.0f);
-
-        //  "forwards" is synonymous with tangent: 
-        XMVECTOR unNormalizedtangentXMV = XMVectorSet(p_Tangent.x, p_Tangent.y, p_Tangent.z, 0.f);  // homogeneous w_component = 0; 
-        XMVECTOR normalizedTangentXMV = XMVector3Normalize(unNormalizedtangentXMV);
-
-        //  "backwards" can be obtained from "forwards": 
-        XMVECTOR normalizedBackwardsXMV = XMVectorNegate(normalizedTangentXMV);
-
-
-
-        //  Normal vector from space curve (hazard: it points inward rather than outward): 
-        //  
-        //  TODO:  use new XMVECTOR member transported_normal: 
-        //    
-        XMVECTOR unNormalizedNormalXMV = XMVectorSet(p_Normal.x, p_Normal.y, p_Normal.z, 0.f);  // homogeneous w_component = 0; 
-        XMVECTOR normalizedNormalXMV = XMVector3Normalize(unNormalizedNormalXMV); 
-
-
-
-        //    
-        //  cameraNormalDistance (like vertical elevation wrt the moving frame): 
-        //    
-        //  Usual value: cameraNormalDistance = -1.8f; 
-        //  Observed: changing to cameraNormalDistance = -2.4f makes flipping much more violent, 
-        //  seemingly exacerbating some discontinuity in the rotations. 
-        //  
-
-        float cameraNormalDistance = +2.f; //  -1.5f;  // Use -1.2f  or -1.8f (negative signum);
-
-
-        //  
-        //  CameraLookAheadDistance between 2.f and 4.f; 
-        //  
-
-        float cameraLookAheadDistance = 4.f; // Use cameraLookAheadDistance in [2.f, 4.f];
-
-
-        //  
-        //  CameraTrailingDistance between 2.f and 3.f; 
-        //  Larger values e.g. 5.f will crash the application. 
-        //  
-
-        float cameraTrailingDistance = 3.f; // Use cameraTrailingDistance in [2.f, 3.f];
-
-
-
-        //      
-        //  For an interesting visual effect, use an altered calculation for cameraPosition below. 
-        //  Change from + XMVectorScale(normalizedNormalXMV, cameraNormalDistance)
-        //  to + XMVectorScale(XMVectorSet(0.f, 1.f, 0.f, 0.f), cameraNormalDistance);
-        //  This amounts to replacing normalizedNormalXMV with the constant World Up vector. 
-        //      
-
-
-        //  Using lerp factor 0.7f gives a crazy bumpy ride on the roller coaster.
-
-
-        XMVECTOR lerpedQuasiUp = XMVectorLerp(
-            XMVectorNegate(normalizedNormalXMV),  // the mathematically proper direction; 
-            XMVectorSet(0.f, 1.f, 0.f, 0.f),  //  the fixed World Up direction; 
-            0.1f
-        ); 
-
-
-        cameraPosition = translatedXMV + XMVectorScale(normalizedBackwardsXMV, cameraTrailingDistance)
-            + XMVectorScale(lerpedQuasiUp, cameraNormalDistance);
-
-
-        cameraLookAt = translatedXMV + XMVectorScale(normalizedTangentXMV, cameraLookAheadDistance);
-
-
-        effectiveUp = XMVectorNegate(normalizedNormalXMV);  //  Up direction in the Parallel Transported Frame;
-    }
-
-    e_xmmatrix_view_trx = XMMatrixLookAtLH(cameraPosition, cameraLookAt, effectiveUp);  //  CHIRALITY Left-handed;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-uint32_t GetNextIdx(uint32_t p_card, uint32_t p_current)
-{
-    uint32_t idxNext = 1 + p_current; 
-
-    if (idxNext + 2 == p_card)
-    {
-        idxNext = 0;
-    }
-
-    return idxNext;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void Hvy3DScene::Update(DX::StepTimer const& timer)
-{
-    DirectX::Keyboard::State        kb = kmi_keyboard->GetState();
-
-    if (kb.F5)
-    {
-        if (e_ViewMatrixFixed == true)
-        {
-            e_ViewMatrixFixed = false;
-        }
-    }
-
-    if (kb.F6)
-    {
-        if (e_ViewMatrixFixed == false)
-        {
-            e_ViewMatrixFixed = true;
-        }
-    }
-
-
-    if (kb.F7)
-    {
-        if (e_UsingMSAA == true)
-        {
-            e_UsingMSAA = false;
-        }
-    }
-
-    if (kb.F8)
-    {
-        if (e_UsingMSAA == false)
-        {
-            e_UsingMSAA = true;
-        }
-    }
-
-
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    static uint32_t  idxUpdateCall = 0;
-
-    idxUpdateCall = (1 + idxUpdateCall) % 3;
-
-    //  undo   static uint32_t idxSpaceCurveElt = 0; // if not impatient;
-
-    static uint32_t idxSpaceCurveElt = 1400;  // impatience factor: 1100, 900, etc...;
-
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    XMFLOAT3 spaceCurvePos{ 0.f, 0.f, 0.f };
-    XMFLOAT3 spaceCurveTangent{ 0.f, 0.f, 0.f };  // ghv: added 20190311; 
-    XMFLOAT3 spaceCurveNormal{ 0.f, 0.f, 0.f };  // ghv: added 20190313; 
-    XMFLOAT3 spaceCurveBinormal{ 0.f, 0.f, 0.f };  // ghv: added 20190315; 
-
-    if (!m_PTF->SpaceCurveVector().empty())
-    {
-        uint32_t card = (uint32_t)(m_PTF->SpaceCurveVector().size());
-
-        spaceCurvePos = this->m_PTF->SpaceCurveVector().at(idxSpaceCurveElt).axon_position_r;
-        spaceCurveTangent = this->m_PTF->SpaceCurveVector().at(idxSpaceCurveElt).axon_tangent_drdt; 
-        spaceCurveNormal = this->m_PTF->SpaceCurveVector().at(idxSpaceCurveElt).axon_normal; 
-        spaceCurveBinormal = this->m_PTF->SpaceCurveVector().at(idxSpaceCurveElt).axon_binormal; 
-
-
-        // alternative idea:  uint32_t futureIdx = GetNextIdx( card, GetNextIdx(card, idxSpaceCurveElt) ); 
-
-
-        if (idxUpdateCall == 0)
-        {
-            idxSpaceCurveElt += 1;
-
-            if (idxSpaceCurveElt + 2 == card)
-            {
-                idxSpaceCurveElt = 0;
-            }
-        }
-    }
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    //      
-    //  World Transformation of the Space Pod (aka MandelPod)
-    //          
-    //  Apply scaling to the Space Pod prior to translation: 
-    //          
-
-    float s5 = 2.f; 
-    if (e_ViewMatrixFixed == true)
-    {
-        s5 = 4.f;
-
-        // TODO: remove : e_rasterizer_fill_mode = D3D11_FILL_SOLID;
-    }
-    else
-    {
-        s5 = 3.f;
-
-        // TODO: remove: e_rasterizer_fill_mode = D3D11_FILL_WIREFRAME;
-    }
-
-#ifdef _DEBUG
-
-    //  For _DEBUG builds, the MandelPod is replaced 
-    //  by the shiny sphere, which requires more drastic scaling: 
-
-    s5 /= 3.f;  
-
-#endif
-
-    XMMATRIX spacePodScaling = XMMatrixScaling(s5, s5, s5);  
-
-#ifdef _DEBUG
-    float accumulatedRadians = (float)timer.GetTotalSeconds() * XMConvertToRadians(45.f);  
-
-    float properRadians = static_cast<float>(fmod(accumulatedRadians, DirectX::XM_2PI)); 
-
-    spacePodScaling = XMMatrixScaling(s5, s5, s5) * XMMatrixRotationX(properRadians);  
-#endif
-
-
-    XMMATRIX spacePodXlat = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ChiralityZOffset);
-
-    XMMATRIX spacePodRotation = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
-
-    e_spacePodWorldTransformation = spacePodScaling * spacePodRotation * spacePodXlat;
-
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    CalculateViewMatrix(spaceCurvePos, spaceCurveTangent, spaceCurveNormal);
-
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    //      
-    //  World Transformation of the Lorenz Attractor: 
-    //   
-    //  Need to push the Lorenz Attractor deeper into the scene's background. 
-    //  This is accomplished by using e_ChiralityZOffset. 
-    //      
-
-    XMMATRIX translation_mx = XMMatrixTranslation(-2.f, 0.f, e_ChiralityZOffset);  
-    XMMATRIX lorenz_scaling = XMMatrixScaling(1.f, 1.f, 1.f);
-
-    XMMATRIX lorenzAttractorWorldTransformation = lorenz_scaling * translation_mx;
-
-    if (this->m_PTF->LoadingComplete())
-    {
-        this->m_PTF->Update(
-            lorenzAttractorWorldTransformation,
-            e_xmmatrix_view_trx,
-            e_xmmatrix_projection_trx 
-        );
-    }
-
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -635,10 +245,10 @@ void Hvy3DScene::Render()
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     context->RSSetState(e_rasterizer_state_solid.Get());
 
-    XMFLOAT3 cameraPosXF3; 
-    XMStoreFloat3(&cameraPosXF3, cameraPosition); 
+    XMMATRIX mView = XMLoadFloat4x4(&m_mView);
+    XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
 
-    this->e_sphybox->Render(cameraPosXF3, e_xmmatrix_view_trx, e_xmmatrix_projection_trx); 
+    this->e_sphybox->Render(m_vEye, mView, mProj); 
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -647,14 +257,9 @@ void Hvy3DScene::Render()
     //    
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    if (e_ViewMatrixFixed == false)
-    {
-        context->RSSetState(e_rasterizer_state_wireframe.Get());
-    }
-    else
-    {
-        context->RSSetState(e_rasterizer_state_solid.Get());
-    }
+    
+    context->RSSetState(e_rasterizer_state_solid.Get());
+
     this->m_PTF->Render(); // Render the Lorenz Attractor loft;  
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -692,9 +297,12 @@ void Hvy3DScene::RenderMandelPod()
 {
     auto context = m_deviceResources->GetD3DDeviceContext();
 
+    XMMATRIX mView = XMLoadFloat4x4(&m_mView);
+    XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
+
     DirectX::XMStoreFloat4x4(
         &e_conbuf_Transform_data.trxWVP, 
-        XMMatrixTranspose(e_spacePodWorldTransformation * e_xmmatrix_view_trx * e_xmmatrix_projection_trx) 
+        XMMatrixTranspose(e_spacePodWorldTransformation * mView * mProj) 
     );
 
     DirectX::XMStoreFloat4x4(
@@ -713,7 +321,7 @@ void Hvy3DScene::RenderMandelPod()
 
     //  matrix for inverse of View transformation: 
 
-    XMMATRIX inverseView = XMMatrixInverse(nullptr, e_xmmatrix_view_trx); 
+    XMMATRIX inverseView = XMMatrixInverse(nullptr, mView); 
 
     DirectX::XMStoreFloat4x4(
         &e_conbuf_Transform_data.trxInverseView, 

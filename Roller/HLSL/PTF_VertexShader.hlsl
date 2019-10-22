@@ -20,17 +20,54 @@ cbuffer WVP_ConstantBufferStruct : register(b0)
 
 struct VertexShaderInput
 {
-	float3    pos       : POSITION;
-	float2    texco     : TEXCOORD0; 
+	float3    pos           : POSITION;
+	float2    texco         : TEXCOORD0; 
+    uint      segment_id    : TEXCOORD1; 
 };
 
 
 struct GEO_IN
 {
-    float4     pos         : SV_POSITION;
-    float2     texco       : TEXCOORD0;
-    float4     worldpos    : TEXCOORD1;
+    float4     pos          : SV_POSITION;
+    float2     texco        : TEXCOORD0;
+    float4     color        : COLOR0;
 };
+
+
+
+
+
+static const float4 allColors[] = 
+{
+    float4(0.0f, 0.0f, 0.0f, 1.0f),
+    float4(0.5f, 0.0f, 0.0f, 1.0f),
+    float4(1.0f, 0.0f, 0.0f, 1.0f),
+
+    float4(0.0f, 0.5f, 0.0f, 1.0f),
+    float4(0.5f, 0.5f, 0.0f, 1.0f),
+    float4(1.0f, 0.5f, 0.0f, 1.0f),
+
+    float4(0.0f, 1.0f, 0.0f, 1.0f),
+    float4(0.5f, 1.0f, 0.0f, 1.0f),
+    float4(1.0f, 1.0f, 0.0f, 1.0f),
+
+
+
+    float4(0.0f, 0.0f, 0.5f, 1.0f),
+    float4(0.5f, 0.0f, 0.5f, 1.0f),
+    float4(1.0f, 0.0f, 0.5f, 1.0f),
+
+    float4(0.0f, 0.5f, 0.5f, 1.0f),
+    float4(0.5f, 0.5f, 0.5f, 1.0f),
+    float4(1.0f, 0.5f, 0.5f, 1.0f),
+
+    float4(0.0f, 1.0f, 0.5f, 1.0f),
+    float4(0.5f, 1.0f, 0.5f, 1.0f),
+    float4(1.0f, 1.0f, 0.5f, 1.0f),
+
+}; 
+
+
 
 
 
@@ -49,19 +86,9 @@ GEO_IN vs_main(VertexShaderInput input)
      
      output.texco = input.texco;
 
-     // output.worldpos = float4(input.pos, 1.f);
+     uint idxColor = input.segment_id % 9; 
 
-    //  Value of e_advert_modulus = 21 is set in class ctor.
-    //  The cyclic values of animator_count 
-    //  attains maximum value = (2 * e_advert_modulus).
-
-    float taper = abs((float)animator_count - 21.f);
-     
-     output.worldpos = float4(
-        input.pos.x + taper, 
-        input.pos.y + taper,
-        input.pos.z + taper,
-        1.f);
+     output.color = allColors[idxColor]; 
 
      return output;
 }

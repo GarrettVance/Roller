@@ -47,8 +47,9 @@ namespace HvyDX
     struct VHG_Vertex_PosTex
     {
         DirectX::XMFLOAT3       e_pos;
-        DirectX::XMFLOAT3       e_normal; // ghv: added 20191016 0817;
+        // DirectX::XMFLOAT3       e_normal; // ghv: added 20191016 0817;  TODO: change inputLayout to match;
         DirectX::XMFLOAT2       e_texco;
+        uint32_t                  e_segment_id;
     };
 
 
@@ -80,7 +81,7 @@ namespace HvyDX
 
         bool            LoadingComplete() { return ptf_loadingComplete; }
 
-        std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_axons; }
+        // retire std::vector<HvyDX::VHG_Axonodromal_Vertex>const& SpaceCurveVector() { return ptf_axons; }
 
 
         void Create_Input_Layout(
@@ -98,13 +99,18 @@ namespace HvyDX
 
         size_t gv_read_lorenz_data_file(); 
 
+    public:
+
+        std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
+
+
+
     private: 
         std::shared_ptr<DX::DeviceResources>                m_deviceResources;
 
         uint32_t                                            ptf_axon_arc_density;
         uint32_t                                            ptf_tube_facets;
         float                                               ptf_tube_radius;
-        std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
 
         Microsoft::WRL::ComPtr<ID3D11InputLayout>           ptf_inputLayout;
 
@@ -122,8 +128,8 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11PixelShader>           ptf_pixelShader;
 
 
-        // unused Microsoft::WRL::ComPtr<ID3D11SamplerState>          ptf_loft_texture_sampler_state;
-        // unused Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    ptf_loft_texture_srv;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>          ptf_loft_texture_sampler_state;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    ptf_loft_texture_srv;
 
         bool                                                ptf_loadingComplete;
     };

@@ -74,10 +74,11 @@ namespace HvyDX
 
 
 
-        void CalculateViewMatrix(
+        void CalculateViewMatrix_Following(
             DirectX::XMFLOAT3 const& p_Position, 
             DirectX::XMFLOAT3 const& p_Tangent, 
-            DirectX::XMFLOAT3 const& p_Normal
+            DirectX::XMFLOAT3 const& p_Normal,
+            DirectX::XMMATRIX const& p_RotationMatrix
         ); 
 
 
@@ -150,9 +151,24 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11PixelShader>           m_pixelShader;
         bool                                                m_loadingComplete;
 
-        DirectX::XMMATRIX                                   e_spacePodWorldTransformation; 
-        DirectX::XMMATRIX                                   e_xmmatrix_view_trx;
-        DirectX::XMMATRIX                                   e_xmmatrix_projection_trx;
+
+        DirectX::XMMATRIX                                 e_spacePodWorldTransformation; 
+        
+
+        DirectX::XMFLOAT4X4                                 m_ProjectionMatrix;
+
+        DirectX::XMFLOAT3                                   m_vEye; 
+        DirectX::XMFLOAT3                                   m_vLookAt; // LookAt position; 
+
+        DirectX::XMFLOAT4X4                                 m_mView; // View matrix;
+
+        // DirectX::XMFLOAT4X4                                 m_mCameraWorld; // World matrix of the camera (inverse of the view matrix); 
+
+
+        DirectX::XMVECTOR                                   vPosPrior;
+
+
+
 
         Microsoft::WRL::ComPtr<ID3D11Buffer>                e_conbuf_Transform_buffer;
         VHG_conbuf_MVPA_struct                              e_conbuf_Transform_data; // TODO: rename;
@@ -164,7 +180,7 @@ namespace HvyDX
         std::unique_ptr<DirectX::Keyboard>                  kmi_keyboard;
         std::unique_ptr<DirectX::Mouse>                     kmi_mouse;
 
-        DirectX::XMVECTOR                                   cameraPosition;
+        // DirectX::XMVECTOR                                   cameraPosition;
     };
 
 }

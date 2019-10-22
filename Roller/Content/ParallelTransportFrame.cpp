@@ -46,17 +46,12 @@ ParallelTransportFrame::ParallelTransportFrame(const std::shared_ptr<DX::DeviceR
     ptf_loadingComplete(false)
 {  
     //   
-    //  My typical Lorenz Attractor data file has 60 thousand records. 
+    //  Typical Lorenz Attractor data file has 60 thousand records. 
     //  
 
 #ifdef _DEBUG
-
     this->ptf_axon_arc_density = 4096;   // Use 4096 to speed launch of debug builds;
-
 #else
-
-    this->ptf_axon_arc_density = 16384 * 4;   //  obfuscate - TODO: need to reduce density.
-
     this->ptf_axon_arc_density = 8192;
 #endif
 
@@ -132,8 +127,8 @@ void ParallelTransportFrame::Render()
   
 
     context->PSSetShader(ptf_pixelShader.Get(), nullptr, 0);
-    // unused context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
-    // unused context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
+    context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
+    context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
 
 
 
@@ -293,11 +288,14 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
 
     std::string g_line = ""; 
 
+    XMFLOAT3   tmp_position; 
+    float tmp_time; 
+    XMFLOAT3   tmp_drdt; 
+    XMFLOAT3   tmp_d2rdt2; 
     VHG_Axonodromal_Vertex    tmp_axon;
 
     uint32_t idxLoop = 0; 
-
-
+    uint32_t trueLoopCount = 0; 
     while (std::getline(gFStr, g_line))
     {
         //             Fields in data file:
@@ -309,23 +307,17 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
         //      ==================================
 
 
-        XMFLOAT3   tmp_position; 
-        float tmp_time; 
-        XMFLOAT3   tmp_drdt; 
-        XMFLOAT3   tmp_d2rdt2; 
+        if (trueLoopCount > 1500)
+        {
+            std::istringstream gSS(g_line);
+            gSS >> tmp_position.x >> tmp_position.y >> tmp_position.z >> tmp_time >> tmp_drdt.x >> tmp_drdt.y >> tmp_drdt.z >> tmp_d2rdt2.x >> tmp_d2rdt2.y >> tmp_d2rdt2.z;
+            XMVECTOR   tmp_position_V = XMLoadFloat3(&tmp_position);
+            tmp_axon = { tmp_position, tmp_position_V, tmp_time, tmp_drdt, tmp_d2rdt2 };
+            ptf_axons.at(idxLoop) = tmp_axon;
+            idxLoop++;
+        }
 
-        std::istringstream gSS(g_line); 
-
-        gSS >> tmp_position.x >> tmp_position.y >> tmp_position.z >> tmp_time >> tmp_drdt.x >> tmp_drdt.y >> tmp_drdt.z >> tmp_d2rdt2.x >> tmp_d2rdt2.y >> tmp_d2rdt2.z;
-
-
-        XMVECTOR   tmp_position_V = XMLoadFloat3(&tmp_position);
-
-        tmp_axon = { tmp_position, tmp_position_V, tmp_time, tmp_drdt, tmp_d2rdt2 };
-
-        ptf_axons.at(idxLoop) = tmp_axon;
-
-        idxLoop++;
+        trueLoopCount++;
 
         if (idxLoop >= ptf_axon_arc_density)  // obfuscate;
         {
@@ -485,10 +477,10 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
 
             uint32_t ii = i_poloidal + (ptf_tube_facets + 1) * i_axial;
 
-            quad_top_left = { surface_points->at(0 + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(0.f, 1.f) };
-            quad_top_right = { surface_points->at((ptf_tube_facets + 1) + ii).e_pos,  XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT2(0.f, 0.f) };
-            quad_bottom_right = { surface_points->at((ptf_tube_facets + 2) + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(1.f, 0.f) };
-            quad_bottom_left = { surface_points->at(1 + ii).e_pos, XMFLOAT3(0.f, 0.f, 0.f),  XMFLOAT2(1.f, 1.f) };
+            quad_top_left = { surface_points->at(0 + ii).e_pos,                             XMFLOAT2(0.f, 1.f), i_axial };
+            quad_top_right = { surface_points->at((ptf_tube_facets + 1) + ii).e_pos,        XMFLOAT2(0.f, 0.f), i_axial };
+            quad_bottom_right = { surface_points->at((ptf_tube_facets + 2) + ii).e_pos,     XMFLOAT2(1.f, 0.f), i_axial };
+            quad_bottom_left = { surface_points->at(1 + ii).e_pos,                          XMFLOAT2(1.f, 1.f), i_axial };
 
             //      Synthesize the 1st of the 2 triangles:
             surface_triangles->push_back(quad_top_left);
@@ -509,6 +501,9 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
         surface_triangles,
         ptf_vertex_buffer_2_buffer.ReleaseAndGetAddressOf() 
     );  // use topology = TRIANGLELIST;
+
+
+#if 3 == 4
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //  
@@ -577,6 +572,9 @@ void ParallelTransportFrame::HansonParallelTransportFrame()
         (const char*)loclal_folder_a.c_str()
     );
 
+#endif 
+
+
 
 #if 3 == 4
     std::ofstream gv_ofstream(fully_qualified_path_a, std::ios::trunc); 
@@ -621,8 +619,9 @@ void ParallelTransportFrame::Create_Input_Layout(const std::vector<byte>& p_byte
 {
     static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,  0,  D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0,  D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT,        0,  D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
     DX::ThrowIfFailed(
@@ -653,6 +652,25 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
 
     // unused this->Load_Texture_Triax();
 
+    Microsoft::WRL::ComPtr<ID3D11Resource>   temp_resource;
+
+
+    DX::ThrowIfFailed(
+        CreateDDSTextureFromFileEx(
+            m_deviceResources->GetD3DDevice(),
+            L"Assets\\1_dds_track.dds",
+            (size_t)0,   //  maxsize,
+            D3D11_USAGE_DEFAULT,
+            D3D11_BIND_SHADER_RESOURCE,
+            0,
+            0,  // miscFlags;
+            false,
+            temp_resource.ReleaseAndGetAddressOf(),
+            ptf_loft_texture_srv.GetAddressOf(),
+            nullptr
+        )
+    );
+
 
     //      
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
@@ -661,7 +679,7 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
     //  
 
-    /*
+
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(sampDesc));
     sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -678,7 +696,7 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
                 ptf_loft_texture_sampler_state.ReleaseAndGetAddressOf()
         )
     );
-    */
+
     
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
