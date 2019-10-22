@@ -127,7 +127,7 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     //      
     float cameraTrailingDistance = -3.f;
 
-    XMVECTOR translatedXMV = XMVectorSet(p_Position.x - 2.f, p_Position.y, p_Position.z + e_ChiralityZOffset, 1.0f);
+    XMVECTOR translatedXMV = XMVectorSet(p_Position.x - 2.f, p_Position.y, p_Position.z + e_ZOffset, 1.0f);
 
 
     //  "forwards" is synonymous with tangent: "backwards" can be obtained from "forwards": 
@@ -152,7 +152,7 @@ void Hvy3DScene::CalculateViewMatrix_Following(
 
     XMVECTOR worldUpDirection = XMVectorNegate(normalizedNormalXMV);
 
-    if (e_ViewMatrixFixed == true)
+    if (e_View3rdPerson == true)
     {
         cameraPosition = XMVectorSet(40.f, 2.f, 60.f, 1.0f);
         cameraLookAt = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);
@@ -174,16 +174,32 @@ void Hvy3DScene::CalculateViewMatrix_Following(
 
 void Hvy3DScene::Update(DX::StepTimer const& timer)
 {
-    DirectX::Keyboard::State        kb = kmi_keyboard->GetState();
-
-    if (kb.F5 && (e_ViewMatrixFixed == true))
+    if (!mandelpod_loadingComplete)
     {
-        e_ViewMatrixFixed = false;
+        return;
     }
 
-    if (kb.F6 && (e_ViewMatrixFixed == false))
+    if (!this->m_PTF->LoadingComplete())
     {
-        e_ViewMatrixFixed = true;
+        return;
+    }
+
+    if (!this->e_sphybox->LoadingComplete())
+    {
+        return;
+    }
+
+
+    DirectX::Keyboard::State        kb = kmi_keyboard->GetState();
+
+    if (kb.F5 && (e_View3rdPerson == true))
+    {
+        e_View3rdPerson = false;
+    }
+
+    if (kb.F6 && (e_View3rdPerson == false))
+    {
+        e_View3rdPerson = true;
     }
 
     if (kb.F7 && (e_UsingMSAA == true))
@@ -199,10 +215,9 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-    static double time_now = 0.00;
-    static double time_prior = 0.00; 
+    static double time_now = timer.GetTotalSeconds();
+    static double time_prior = timer.GetTotalSeconds();
 
-    time_prior = time_now;
     time_now = timer.GetTotalSeconds(); 
 
     float fElapsedTime = (float)(time_now - time_prior);
@@ -226,8 +241,10 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
         spaceCurveNormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_normal; 
         spaceCurveBinormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_binormal; 
 
-        if (idxUpdateCall % 4 == 0)
+        // if (idxUpdateCall % 4 == 0)
+        if (fElapsedTime > 0.03f)
         {
+            time_prior = time_now;
             idxSpaceCurveElt += 1;
             if (idxSpaceCurveElt + 2 == card) idxSpaceCurveElt = 0; // wrap-around;
         }
@@ -248,11 +265,11 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     //  World Transformation of the Space Pod (aka MandelPod)
     //  Apply scaling to the Space Pod prior to translation: 
     //          
-    float s5 = (e_ViewMatrixFixed == true) ? 4.f : 3.f;
+    float s5 = (e_View3rdPerson == true) ? 4.f : 3.f;
 #ifdef _DEBUG
     //  For _DEBUG builds, the MandelPod is replaced 
     //  by the shiny sphere, which requires more drastic scaling: 
-    s5 /= 3.f;  
+    s5 = 0.8f;
 #endif
     XMMATRIX spacePodScaling = XMMatrixScaling(s5, s5, s5);  
 
@@ -262,16 +279,17 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     spacePodScaling = XMMatrixScaling(s5, s5, s5) * XMMatrixRotationX(properRadians);  
 #endif
 
-    XMMATRIX spacePodXlat = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ChiralityZOffset);
+    XMMATRIX spacePodXlat = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ZOffset);
 
     XMMATRIX spacePodRotation = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
 
-    e_spacePodWorldTransformation = spacePodScaling * spacePodRotation * spacePodXlat;
+    XMMATRIX mandelpod_worldMatrix_MAT = spacePodScaling * spacePodRotation * spacePodXlat;
+    XMStoreFloat4x4(&mandelpod_worldMatrix_F4X4, mandelpod_worldMatrix_MAT);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifdef GHV_OPTION_LATER
-    CalculateViewMatrix(spaceCurvePos, spaceCurveTangent, spaceCurveNormal, cameraRotation);
+    // TODO: remove CalculateViewMatrix(spaceCurvePos, spaceCurveTangent, spaceCurveNormal, cameraRotation);
 #endif
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -280,10 +298,10 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     //  World Transformation of the Lorenz Attractor: 
     //   
     //  Need to push the Lorenz Attractor deeper into the scene's background. 
-    //  This is accomplished by using e_ChiralityZOffset. 
+    //  This is accomplished by using e_ZOffset. 
     //      
 
-    XMMATRIX translation_mx = XMMatrixTranslation(-2.f, 0.f, e_ChiralityZOffset);  
+    XMMATRIX translation_mx = XMMatrixTranslation(-2.f, 0.f, e_ZOffset);  
     XMMATRIX lorenz_scaling = XMMatrixScaling(1.f, 1.f, 1.f);
 
     XMMATRIX lorenzAttractorWorldTransformation = lorenz_scaling * translation_mx;

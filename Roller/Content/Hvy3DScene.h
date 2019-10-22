@@ -128,59 +128,49 @@ namespace HvyDX
         Microsoft::WRL::ComPtr<ID3D11DepthStencilView>      e_msaaDepthStencilView;
         unsigned int                                        e_MSAASampleCount;
         bool                                                e_UsingMSAA;
+
+
+
         Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_solid;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_wireframe;
-        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       e_rasterizer_state_mandelpod;
 
-        bool                                                e_ViewMatrixFixed; 
-        float                                               e_ChiralityZOffset; // TODO: cleanup;
-
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_mirror; 
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_black;
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_normal;
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    e_srv_environment;
-
-        std::vector<VHG_MaterialUsage_struct>              *e_vect_material_usages;
-
-        Microsoft::WRL::ComPtr<ID3D11InputLayout>           m_waveFrontInputLayoutTNB;
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                m_vertexBuffer;
-        uint32                                              m_vertexCount;
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                m_indexBuffer;
-        uint32                                              m_indexCount;
-        Microsoft::WRL::ComPtr<ID3D11VertexShader>          m_vertexShader;
-        Microsoft::WRL::ComPtr<ID3D11PixelShader>           m_pixelShader;
-        bool                                                m_loadingComplete;
+        bool                                                e_View3rdPerson; 
+        float                                               e_ZOffset; // TODO: cleanup;
 
 
-        DirectX::XMMATRIX                                 e_spacePodWorldTransformation; 
-        
+        std::vector<VHG_MaterialUsage_struct>              *mandelpod_materialUsages;
+        Microsoft::WRL::ComPtr<ID3D11InputLayout>           mandelpod_waveFrontInputLayoutTNB;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_vertexBuffer;
+        uint32                                              mandelpod_vertexCount;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_indexBuffer;
+        uint32                                              mandelpod_indexCount;
+        Microsoft::WRL::ComPtr<ID3D11VertexShader>          mandelpod_vertexShader;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState>       mandelpod_rasterizerState;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>           mandelpod_pixelShader;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    mandelpod_srv_mirror; 
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    mandelpod_srv_black;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    mandelpod_srv_normal;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>    mandelpod_srv_environment;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>          mandelpod_colorSampler;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>          mandelpod_normalSampler;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>          mandelpod_environmentSampler;
+        bool                                                mandelpod_loadingComplete;
 
-        DirectX::XMFLOAT4X4                                 m_ProjectionMatrix;
+        VHG_conbuf_MVPA_struct                              mandelpod_transformData;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                mandelpod_transformBuffer;
 
+
+
+        DirectX::XMFLOAT4X4                                 mandelpod_worldMatrix_F4X4; 
         DirectX::XMFLOAT3                                   m_vEye; 
         DirectX::XMFLOAT3                                   m_vLookAt; // LookAt position; 
-
         DirectX::XMFLOAT4X4                                 m_mView; // View matrix;
-
-        // DirectX::XMFLOAT4X4                                 m_mCameraWorld; // World matrix of the camera (inverse of the view matrix); 
-
-
-        DirectX::XMVECTOR                                   vPosPrior;
+        DirectX::XMFLOAT4X4                                 m_ProjectionMatrix;
 
 
-
-
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                e_conbuf_Transform_buffer;
-        VHG_conbuf_MVPA_struct                              e_conbuf_Transform_data; // TODO: rename;
-
-        Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_colorSampler;
-        Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_normalSampler;
-        Microsoft::WRL::ComPtr<ID3D11SamplerState>          e_environmentSampler;
 
         std::unique_ptr<DirectX::Keyboard>                  kmi_keyboard;
         std::unique_ptr<DirectX::Mouse>                     kmi_mouse;
-
-        // DirectX::XMVECTOR                                   cameraPosition;
     };
 
 }

@@ -20,13 +20,14 @@ using namespace Windows::Foundation;
 
 
 Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-    m_loadingComplete(false),
-    m_indexCount(0),
+    mandelpod_loadingComplete(false),
+    mandelpod_vertexCount(0),
+    mandelpod_indexCount(0),
     e_UsingMSAA(true),
     m_deviceResources(deviceResources), 
-    e_ViewMatrixFixed(false)
+    e_View3rdPerson(false)
 {
-    e_ChiralityZOffset = +36.f;   // TODO: remove;
+    e_ZOffset = +36.f;   // TODO: remove;
 
 
     //  instantiate the ParallelTransportFrame prior to calling CreateDeviceDependentResources: 
@@ -158,22 +159,26 @@ void Hvy3DScene::DrawIndexedPerMaterial(void)
 {
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-
     uint32_t ib_index_offset = 0; 
-    uint32_t loop_limit = (uint32_t)e_vect_material_usages->size(); 
+    uint32_t loop_limit = (uint32_t)mandelpod_materialUsages->size(); 
 
-    for (uint32_t idx_loop = 0; idx_loop < loop_limit; idx_loop++)   //  
+    for (uint32_t idx_loop = 0; idx_loop < loop_limit; idx_loop++)
     {
-        uint32_t materialOrdinal = (e_vect_material_usages->at(idx_loop).MaterialOrdinal);  //   % 7;
+        uint32_t materialOrdinal = (mandelpod_materialUsages->at(idx_loop).MaterialOrdinal);  //   % 7;
 
-        ID3D11ShaderResourceView * arr_phong_srv[4] = { e_srv_mirror.Get(), e_srv_black.Get(), e_srv_normal.Get(), e_srv_environment.Get() }; 
+        ID3D11ShaderResourceView * arr_phong_srv[4] = 
+        { 
+            mandelpod_srv_mirror.Get(), 
+            mandelpod_srv_black.Get(), 
+            mandelpod_srv_normal.Get(), 
+            mandelpod_srv_environment.Get() 
+        };
             
         context->PSSetShaderResources(0, 4, arr_phong_srv);
 
-
         //   The number of index buffer entry usages will be 3x the count of triangle face usages. 
 
-        uint32_t n_triangle_face_usages = e_vect_material_usages->at(idx_loop).UsageCount;  
+        uint32_t n_triangle_face_usages = mandelpod_materialUsages->at(idx_loop).UsageCount;  
         uint32_t n_ib_entry_usages = 3 * n_triangle_face_usages;
 
         context->DrawIndexed( n_ib_entry_usages,  ib_index_offset, 0 );
@@ -191,7 +196,7 @@ void Hvy3DScene::DrawIndexedPerMaterial(void)
 
 void Hvy3DScene::Render()
 {
-    if (!m_loadingComplete)
+    if (!mandelpod_loadingComplete)
     {
         return;
     }
@@ -232,7 +237,7 @@ void Hvy3DScene::Render()
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    context->RSSetState(e_rasterizer_state_mandelpod.Get());
+    context->RSSetState(mandelpod_rasterizerState.Get());
 
     RenderMandelPod();
 
@@ -299,23 +304,24 @@ void Hvy3DScene::RenderMandelPod()
 
     XMMATRIX mView = XMLoadFloat4x4(&m_mView);
     XMMATRIX mProj = XMLoadFloat4x4(&m_ProjectionMatrix);
+    XMMATRIX mandelpod_worldMatrix_MAT = XMLoadFloat4x4(&mandelpod_worldMatrix_F4X4);
 
     DirectX::XMStoreFloat4x4(
-        &e_conbuf_Transform_data.trxWVP, 
-        XMMatrixTranspose(e_spacePodWorldTransformation * mView * mProj) 
+        &mandelpod_transformData.trxWVP, 
+        XMMatrixTranspose(mandelpod_worldMatrix_MAT * mView * mProj) 
     );
 
     DirectX::XMStoreFloat4x4(
-        &e_conbuf_Transform_data.trxWorld, 
-        XMMatrixTranspose(e_spacePodWorldTransformation)
+        &mandelpod_transformData.trxWorld, 
+        XMMatrixTranspose(mandelpod_worldMatrix_MAT)
     );
 
     //  matrix for inverse transpose of World transformation: 
 
-    XMMATRIX inverseTransposeWorld = XMMatrixInverse(nullptr, XMMatrixTranspose(e_spacePodWorldTransformation)); 
+    XMMATRIX inverseTransposeWorld = XMMatrixInverse(nullptr, XMMatrixTranspose(mandelpod_worldMatrix_MAT)); 
 
     DirectX::XMStoreFloat4x4(
-        &e_conbuf_Transform_data.trxInvTposeWorld, 
+        &mandelpod_transformData.trxInvTposeWorld, 
         XMMatrixTranspose(inverseTransposeWorld)
     );
 
@@ -324,34 +330,41 @@ void Hvy3DScene::RenderMandelPod()
     XMMATRIX inverseView = XMMatrixInverse(nullptr, mView); 
 
     DirectX::XMStoreFloat4x4(
-        &e_conbuf_Transform_data.trxInverseView, 
+        &mandelpod_transformData.trxInverseView, 
         XMMatrixTranspose(inverseView)
     );
 
-    context->UpdateSubresource1( e_conbuf_Transform_buffer.Get(), 0, NULL, &e_conbuf_Transform_data, 0, 0, 0 );
+    context->UpdateSubresource1( mandelpod_transformBuffer.Get(), 0, NULL, &mandelpod_transformData, 0, 0, 0 );
 
     //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     //          
-    //  Render the spacePod: 
+    //  Render the mandelpod: 
     //      
     //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
     UINT vb_offset = 0;
-    context->IASetVertexBuffers( 0, 1, m_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset );
-    context->IASetIndexBuffer( m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
+    context->IASetVertexBuffers( 0, 1, mandelpod_vertexBuffer.GetAddressOf(), &vb_stride, &vb_offset );
+
+    context->IASetIndexBuffer( mandelpod_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0 );
+
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->IASetInputLayout(m_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
-    context->VSSetShader( m_vertexShader.Get(), nullptr, 0 );
-    context->VSSetConstantBuffers1( 0, 1, e_conbuf_Transform_buffer.GetAddressOf(), nullptr, nullptr );
-    context->PSSetShader( m_pixelShader.Get(), nullptr, 0 );
+
+    context->IASetInputLayout(mandelpod_waveFrontInputLayoutTNB.Get());  //  ghv added Tangent and Bitangent 20190204; 
+
+    context->VSSetShader( mandelpod_vertexShader.Get(), nullptr, 0 );
+    context->VSSetConstantBuffers1( 0, 1, mandelpod_transformBuffer.GetAddressOf(), nullptr, nullptr );
+
+
+
+    context->PSSetShader(mandelpod_pixelShader.Get(), nullptr, 0 );
 
     //   Must bind all three samplers for Phong Bump shading: 
 
     ID3D11SamplerState * arrSamplers[3] = { 
-        e_colorSampler.Get(), 
-        e_normalSampler.Get(), 
-        e_environmentSampler.Get() 
+        mandelpod_colorSampler.Get(), 
+        mandelpod_normalSampler.Get(), 
+        mandelpod_environmentSampler.Get() 
     }; 
     context->PSSetSamplers(0, 3, arrSamplers);
 
@@ -531,14 +544,14 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     //       
 
     VHG_MaterialUsage_struct     tmp_mat_usage;
-    e_vect_material_usages = new std::vector<VHG_MaterialUsage_struct>(); 
+    mandelpod_materialUsages = new std::vector<VHG_MaterialUsage_struct>(); 
 
     //     Special Case:   synthesize a "fake" element to begin the std::vector. 
     //     This "fake" element won't ever be accessed, but will keep 
     //     cardinalities in line with element index values: 
     tmp_mat_usage.MaterialOrdinal = 0; 
     tmp_mat_usage.UsageCount = 0; 
-    e_vect_material_usages->push_back(tmp_mat_usage); 
+    mandelpod_materialUsages->push_back(tmp_mat_usage); 
 
     //     Now get the important MaterialUsage values: 
     uint32_t    prior_material = ptr_plector_attributes.at(0);   
@@ -554,7 +567,7 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
         {
             tmp_mat_usage.MaterialOrdinal = prior_material;
             tmp_mat_usage.UsageCount = usage_count; 
-            e_vect_material_usages->push_back(tmp_mat_usage); 
+            mandelpod_materialUsages->push_back(tmp_mat_usage); 
             prior_material = *iter_attribs;
             usage_count = 1; 
         }
@@ -562,7 +575,7 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
     //  Then add the final VHG_MaterialUsage_struct: 
     tmp_mat_usage.MaterialOrdinal = prior_material;
     tmp_mat_usage.UsageCount = usage_count; 
-    e_vect_material_usages->push_back(tmp_mat_usage); 
+    mandelpod_materialUsages->push_back(tmp_mat_usage); 
     //  Done counting MaterialUsages. 
 
     //      
@@ -588,7 +601,7 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
 
     //  Create the Vertex Buffer for the WaveFrontReader: 
 
-    m_vertexCount = (unsigned int)stack_wfr.plector_vertices.size();
+    mandelpod_vertexCount = (unsigned int)stack_wfr.plector_vertices.size();
 
     D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
     vertexBufferData.pSysMem = &(stack_wfr.plector_vertices[0]);
@@ -603,13 +616,13 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
         m_deviceResources->GetD3DDevice()->CreateBuffer(
             &vertexBufferDesc,
             &vertexBufferData,
-            &m_vertexBuffer
+            &mandelpod_vertexBuffer
         )
     );
 
     //  Create the Index Buffer for the WaveFrontReader: 
 
-    m_indexCount = (unsigned int)stack_wfr.plector_indices.size();
+    mandelpod_indexCount = (unsigned int)stack_wfr.plector_indices.size();
 
     D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
     indexBufferData.pSysMem = &(stack_wfr.plector_indices[0]);
@@ -624,7 +637,7 @@ void Hvy3DScene::CreateVertexBufferWavefrontOBJ(void)
         m_deviceResources->GetD3DDevice()->CreateBuffer(
             &indexBufferDesc,
             &indexBufferData,
-            &m_indexBuffer
+            &mandelpod_indexBuffer
         )
     );
 }
@@ -680,7 +693,7 @@ void Hvy3DScene::CreateRasterizerState()
     DX::ThrowIfFailed(
         m_deviceResources->GetD3DDevice()->CreateRasterizerState(
         &rasterizerstate_descr,
-        e_rasterizer_state_mandelpod.ReleaseAndGetAddressOf()
+        mandelpod_rasterizerState.ReleaseAndGetAddressOf()
     ));
 }
 
@@ -711,14 +724,14 @@ void Hvy3DScene::CreateColorSampler()
     DX::ThrowIfFailed(
         m_deviceResources->GetD3DDevice()->CreateSamplerState(
             &samplerstate_descr,
-            e_colorSampler.ReleaseAndGetAddressOf()
+            mandelpod_colorSampler.ReleaseAndGetAddressOf()
         )
     );
 
     DX::ThrowIfFailed(
         m_deviceResources->GetD3DDevice()->CreateSamplerState(
             &samplerstate_descr,
-            e_normalSampler.ReleaseAndGetAddressOf()
+            mandelpod_normalSampler.ReleaseAndGetAddressOf()
         )
     );
 }
@@ -739,7 +752,7 @@ void Hvy3DScene::CreateEnvironmentSampler()
     DX::ThrowIfFailed(
         m_deviceResources->GetD3DDevice()->CreateSamplerState(
             &samplerstate_descr,
-            e_environmentSampler.ReleaseAndGetAddressOf()
+            mandelpod_environmentSampler.ReleaseAndGetAddressOf()
         )
     );
 }
@@ -755,11 +768,9 @@ void Hvy3DScene::CreateEnvironmentSampler()
 
 void Hvy3DScene::CreateDeviceDependentResources()
 {
-
     for (e_MSAASampleCount = DX::DeviceResources::c_targetSampleCount; e_MSAASampleCount > 1; e_MSAASampleCount--)
     {
         UINT levels = 0;
-
         if (FAILED(m_deviceResources->GetD3DDevice()->CheckMultisampleQualityLevels(DX::DeviceResources::c_backBufferFormat, e_MSAASampleCount, &levels)))
         {
             continue;
@@ -776,13 +787,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
         throw std::exception("MSAA not supported");
     }
 
-
-
-
-
-
-
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     this->m_PTF->CreateDeviceDependentResources();
 
@@ -797,7 +802,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
             m_deviceResources->GetD3DDevice(),
             L"Assets\\2_dds_color_type_dawning.dds", 
             temp_resource.ReleaseAndGetAddressOf(),
-            e_srv_mirror.GetAddressOf(),
+            mandelpod_srv_mirror.GetAddressOf(),
             0,
             nullptr
         )
@@ -808,7 +813,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
             m_deviceResources->GetD3DDevice(),
             L"Assets\\2_dds_color_black_dawn.dds", 
             temp_resource.ReleaseAndGetAddressOf(),
-            e_srv_black.GetAddressOf(),
+            mandelpod_srv_black.GetAddressOf(),
             0,
             nullptr
         )
@@ -825,7 +830,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
             D3D11_RESOURCE_MISC_TEXTURECUBE,
             false, 
             temp_resource.ReleaseAndGetAddressOf(),
-            e_srv_environment.GetAddressOf(),
+            mandelpod_srv_environment.GetAddressOf(),
             nullptr
         )
     );
@@ -835,7 +840,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
             m_deviceResources->GetD3DDevice(),
             L"Assets\\2_dds_bump_type_dawning.dds",
             temp_resource.ReleaseAndGetAddressOf(),
-            e_srv_normal.GetAddressOf(),
+            mandelpod_srv_normal.GetAddressOf(),
             0,
             nullptr
         )
@@ -852,7 +857,6 @@ void Hvy3DScene::CreateDeviceDependentResources()
     auto loadVSTask = DX::ReadDataAsync(L"PhongBumpVertexShader.cso");
     auto loadPSTask = DX::ReadDataAsync(L"PhongBumpPixelShader.cso");
 
-
     auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) 
     {
         DX::ThrowIfFailed(
@@ -860,7 +864,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
                 &fileData[0],
                 fileData.size(),
                 nullptr,
-                &m_vertexShader
+                &mandelpod_vertexShader
                 )
             );
 
@@ -879,12 +883,10 @@ void Hvy3DScene::CreateDeviceDependentResources()
                 ARRAYSIZE(vertexDesc),
                 &fileData[0],
                 fileData.size(),
-                &m_waveFrontInputLayoutTNB
+                &mandelpod_waveFrontInputLayoutTNB
                 )
             );
     });
-
-
 
 
     auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData) 
@@ -894,7 +896,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
                 &fileData[0],
                 fileData.size(),
                 nullptr,
-                &m_pixelShader
+                &mandelpod_pixelShader
                 )
             );
 
@@ -904,7 +906,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
             m_deviceResources->GetD3DDevice()->CreateBuffer(
                 &constantBufferDesc,
                 nullptr,
-                &e_conbuf_Transform_buffer
+                &mandelpod_transformBuffer
                 )
             );
     });
@@ -924,7 +926,7 @@ void Hvy3DScene::CreateDeviceDependentResources()
 
     createCubeTask.then([this] () 
     {
-        m_loadingComplete = true;
+        mandelpod_loadingComplete = true;
     });
 
 }
@@ -941,17 +943,19 @@ void Hvy3DScene::CreateDeviceDependentResources()
 
 void Hvy3DScene::ReleaseDeviceDependentResources()
 {
-    m_loadingComplete = false;
-    m_vertexShader.Reset();
+    mandelpod_loadingComplete = false;
 
-    m_waveFrontInputLayoutTNB.Reset();
+    mandelpod_vertexShader.Reset();
 
-    m_pixelShader.Reset();
+    mandelpod_waveFrontInputLayoutTNB.Reset();
 
-
-    e_conbuf_Transform_buffer.Reset();
+    mandelpod_pixelShader.Reset();
 
 
-    m_vertexBuffer.Reset();
-    m_indexBuffer.Reset();
+    mandelpod_transformBuffer.Reset();
+
+
+    mandelpod_vertexBuffer.Reset();
+
+    mandelpod_indexBuffer.Reset();
 }
