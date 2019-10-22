@@ -108,33 +108,12 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     DirectX::XMMATRIX const& p_RotationMatrix
 )
 {
-    XMVECTOR cameraPosition3rdPerson = XMVectorSet(40.f, 2.f, 60.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(40.f, 2.f, 30.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(0.f, 2.f, 30.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, 60.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(-40.f, 0.f, 60.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -10.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -1.f, 1.0f);
-    cameraPosition3rdPerson = XMVectorSet(0.f, 0.f, -4.f, 1.0f);  // 0, 0, -4, 1; 
-    cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, -4.f, 1.0f);  // 0, 0, -4, 1; 
-
-
-    XMVECTOR cameraLookAt3rdPerson = XMVectorSet(20.f, 0.5f, 66.f, 1.0f);
-    cameraLookAt3rdPerson = XMVectorSet(40.f, 0.5f, 66.f, 1.0f);
-    cameraLookAt3rdPerson = XMVectorSet(80.f, 0.5f, 66.f, 1.0f);
-    cameraLookAt3rdPerson = XMVectorSet(0.f, 0.5f, 36.f, 1.0f);
-    cameraLookAt3rdPerson = XMVectorSet(0.f, 0.0f, 36.f, 1.0f); // 0, 0, 36, 1; 
-    cameraLookAt3rdPerson = XMVectorSet(40.f, 0.0f, 36.f, 1.0f); // 0, 0, 36, 1; 
-    cameraLookAt3rdPerson = XMVectorSet(20.f, 0.0f, 36.f, 1.0f); // better;
-    cameraLookAt3rdPerson = XMVectorSet(10.f, 0.0f, 36.f, 1.0f); //
-
-
+    XMVECTOR cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, -4.f, 1.0f);
+    XMVECTOR cameraLookAt3rdPerson = XMVectorSet(10.f, 0.0f, 36.f, 1.0f); //
     XMVECTOR worldUpDirection3rdPerson = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); 
 
     XMMATRIX viewMatrix_3rdPerson_MAT = XMMatrixLookAtLH(cameraPosition3rdPerson, cameraLookAt3rdPerson, worldUpDirection3rdPerson); // Left-handed;
     XMStoreFloat4x4(&viewMatrix_3rdPerson_F4X4, viewMatrix_3rdPerson_MAT);
-
-    //  TODO:  use new XMVECTOR member transported_normal: 
 
     //  
     //  The curve Normal points inward towards the center of curvature, 
@@ -155,7 +134,6 @@ void Hvy3DScene::CalculateViewMatrix_Following(
 
     XMVECTOR translatedXMV = XMVectorSet(p_Position.x - 2.f, p_Position.y, p_Position.z + e_ZOffset, 1.0f);
 
-
     //  "forwards" is synonymous with tangent: "backwards" can be obtained from "forwards": 
     XMVECTOR normalizedTangentXMV = XMVector3Normalize(
         XMVectorSet(p_Tangent.x, p_Tangent.y, p_Tangent.z, 0.f)  // homogeneous w_component = 0; 
@@ -170,15 +148,16 @@ void Hvy3DScene::CalculateViewMatrix_Following(
         XMVectorScale(normalizedTangentXMV, cameraTrailingDistance) + 
         XMVectorScale(normalizedNormalXMV, cameraNormalDistance);
 
+
+#if 3 == 3  
+    // Either of these will work...
     XMVECTOR cameraLookAt = translatedXMV + XMVectorScale(normalizedTangentXMV, cameraLookAheadDistance);
+#else 
+    XMVECTOR cameraLookAt = cameraPosition + XMVectorScale(normalizedTangentXMV, cameraLookAheadDistance);
+#endif
 
-    cameraLookAt = cameraPosition + XMVectorScale(normalizedTangentXMV, cameraLookAheadDistance);
-
-    //  experimental XMVECTOR worldUpDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
     XMVECTOR worldUpDirection = XMVectorNegate(normalizedNormalXMV);
-
-    //  if (!XMVector3Equal(cameraLookAt, XMVectorZero()))
     
     XMMATRIX viewMatrix_1stPerson_MAT = XMMatrixLookAtLH(cameraPosition, cameraLookAt, worldUpDirection); // Left-handed;
     XMStoreFloat4x4(&viewMatrix_1stPerson_F4X4, viewMatrix_1stPerson_MAT);

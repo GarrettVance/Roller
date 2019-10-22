@@ -309,7 +309,8 @@ size_t ParallelTransportFrame::gv_read_lorenz_data_file()
         //      ==================================
 
 
-        if (trueLoopCount > 1500)
+        // if (trueLoopCount > 1500)
+        if (trueLoopCount > 1515)
         {
             std::istringstream gSS(g_line);
             gSS >> tmp_position.x >> tmp_position.y >> tmp_position.z >> tmp_time >> tmp_drdt.x >> tmp_drdt.y >> tmp_drdt.z >> tmp_d2rdt2.x >> tmp_d2rdt2.y >> tmp_d2rdt2.z;
