@@ -143,6 +143,7 @@
     <None Include="StrangeAttractor\lorenz_debug.ghvdata">
       <Filter>StrangeAttractor</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="HLSL\PhongBumpPixelShader.hlsl">
