@@ -1,7 +1,7 @@
 # Roller
-DirectX D3D11 first-person roller coaster on the Lorenz Attractor. 
+DirectX D3D11 first-person roller coaster on the Lorenz Attractor. A brief video is online at https://youtu.be/v94JQgMI0G0.
 
-Multisample anti-aliasing (MSAA) has recently been incorporated into Roller, resulting in significantly improved render quality for the Lorenz Attractor in the 3rd-person view. Use the keyboard F7 and F8 keys to respectively disable or enable MSAA. MSAA is enabled by default. Use the keyboard F5 and F6 keys to toggle between 3rd-person view and first-person perspective. See the Screenshots directory for examples. Refer to the Multisample_AntiAliasing.cpp file in this repository for details of the MSAA mechanism.  
+Multisample anti-aliasing (MSAA) has recently been incorporated into Roller, resulting in significantly improved render quality for the Lorenz Attractor in the 3rd-person view. Use the keyboard F7 and F8 keys to respectively disable or enable MSAA. MSAA is enabled by default. Both a 3rd-person and a first-person perspective are rendered in multiple viewports. See the Screenshots directory for examples. Refer to the Multisample_AntiAliasing.cpp file in this repository for details of the MSAA mechanism.  
 
 This is a complete solution for Visual Studio 2017 which builds a DirectX D3D11 application for Windows 10 UWP. You can build for either x64 debug or x64 release. 
 
