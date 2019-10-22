@@ -76,6 +76,15 @@
     <ClCompile Include="Content\DirectionCosineMatrix.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Content\Multisample_AntiAliasing.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\MandelPod.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\VertexTangents.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />

@@ -275,9 +275,12 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Common\AlteredDevice.cpp" />
     <ClCompile Include="Content\DirectionCosineMatrix.cpp" />
+    <ClCompile Include="Content\MandelPod.cpp" />
+    <ClCompile Include="Content\Multisample_AntiAliasing.cpp" />
     <ClCompile Include="Content\ParallelTransportFrame.cpp" />
     <ClCompile Include="Content\Sphybox.cpp" />
     <ClCompile Include="Content\TexCoSphere.cpp" />
+    <ClCompile Include="Content\VertexTangents.cpp" />
     <ClCompile Include="RollerMain.cpp" />
     <ClCompile Include="Content\Hvy3DScene.cpp" />
     <ClCompile Include="Content\HUD.cpp" />

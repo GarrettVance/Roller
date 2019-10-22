@@ -67,11 +67,12 @@ namespace HvyDX
         Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
         void CreateDeviceDependentResources();
-
         void CreateWindowSizeDependentResources();
-
         void ReleaseDeviceDependentResources();
 
+        void MSAA_CreateWindowSizeDepResources(); 
+        void MSAA_Render(); 
+        void MSAA_TestDeviceSupport();
 
 
         void CalculateViewMatrix_Following(
