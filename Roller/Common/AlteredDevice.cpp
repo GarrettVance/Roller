@@ -104,9 +104,11 @@ DX::DeviceResources::DeviceResources() :
 	CreateDeviceResources();
 }
 
-// Configures resources that don't depend on the Direct3D device.
+
+
 void DX::DeviceResources::CreateDeviceIndependentResources()
 {
+    // Configures resources that don't depend on the Direct3D device.
 	// Initialize Direct2D resources.
 	D2D1_FACTORY_OPTIONS options;
 	ZeroMemory(&options, sizeof(D2D1_FACTORY_OPTIONS));
@@ -146,9 +148,13 @@ void DX::DeviceResources::CreateDeviceIndependentResources()
 		);
 }
 
-// Configures the Direct3D device, and stores handles to it and the device context.
+
+
+
 void DX::DeviceResources::CreateDeviceResources() 
 {
+    // Configures the Direct3D device, and stores handles to it and the device context.
+    //  
 	// This flag adds support for surfaces with a different color channel ordering
 	// than the API default. It is required for compatibility with Direct2D.
 	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -245,69 +251,45 @@ void DX::DeviceResources::CreateDeviceResources()
 
 
 
-
-
-
 void DX::DeviceResources::gv_CalcViewports(void)
 {
-    float viewport_A_width = GetOutputSize().Width;
-    float viewport_A_height = GetOutputSize().Height;
+    float wMajor = GetOutputSize().Width;
+    float hMajor = GetOutputSize().Height;
 
-    m_viewport_Large = CD3D11_VIEWPORT(
-    );
-
-    this->m_viewport_Large = {
-        0.f,            
-        0.f,           
-        viewport_A_width,
-        viewport_A_height,
+    m_viewport_Large = {
+        0.f, 
+        0.f, // top left corner x,y;
+        wMajor, 
+        hMajor, // width, height;
         0.0f, 
-        1.f
+        1.f  // depth min, depth max;
     }; 
 
-    // float ghv_viewport_B_height = 480.f;
-    // float ghv_viewport_B_width = 640.f;
-
-    float scaleFactorVP = 0.2f;  // Use 0.25f; 
-    float ghv_viewport_B_width = scaleFactorVP * viewport_A_width;
-    float ghv_viewport_B_height = scaleFactorVP * viewport_A_height;
-
-
-
-
-    float leftX_viewport_B = 0.f; //  10.f;  //  -20.f;
-    float leftY_viewport_B = 0.f;  //  130.f;  //  m_d3dRenderTargetSize.Height - ghv_viewport_B_height;
+    float ratioMinorToMajor = 0.25f;  // Use 0.3f (or 0.2f); 
+    float wMinor = ratioMinorToMajor * wMajor;
+    float hMinor = ratioMinorToMajor * hMajor;
+    float xMinor = 0.f;  
+    float yMinor = 0.f;
 
     m_viewport_Small = {
-        leftX_viewport_B,           //  top_leftX;
-        leftY_viewport_B,  //  top_leftY;
-        ghv_viewport_B_width, 
-        ghv_viewport_B_height, 
-        0.f,
-        0.0f
+        xMinor, 
+        yMinor,  // top_left x, y;
+        wMinor, 
+        hMinor, // width, height; 
+        0.0f,  // ghv: use zero depth to force VP to front;
+        0.0f  // ghv: use zero depth to force VP to front;
     };
 
-    D3D11_VIEWPORT ghv_viewports[2];
-    ghv_viewports[0] = this->m_viewport_Large;
-    ghv_viewports[1] = this->m_viewport_Small;
-
+    D3D11_VIEWPORT ghv_viewports[] = { m_viewport_Large, m_viewport_Small };
     m_d3dContext->RSSetViewports(2, ghv_viewports);
 }
 
 
 
-
-
-
-
-
-
-
-
-
-// These resources need to be recreated every time the window size is changed.
 void DX::DeviceResources::CreateWindowSizeDependentResources() 
 {
+    // These resources need to be recreated every time the window size is changed.
+    //  
 	// Clear the previous window size specific context.
 	ID3D11RenderTargetView* nullViews[] = {nullptr};
 	m_d3dContext->OMSetRenderTargets(ARRAYSIZE(nullViews), nullViews, nullptr);
@@ -573,28 +555,21 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
     //              
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
-
-
-
 
 #if 3 == 4
-	// Set the 3D rendering viewport to target the entire window.
+    //  TODO:  ghv: remove this code; 
+    //  ========================
+	//  Set the 3D rendering viewport to target the entire window.
 	m_screenViewport = CD3D11_VIEWPORT(
 		0.0f,
 		0.0f,
 		m_d3dRenderTargetSize.Width,
 		m_d3dRenderTargetSize.Height
 		);
-
 	m_d3dContext->RSSetViewports(1, &m_screenViewport);
 #endif 
 
-
     gv_CalcViewports();
-
-
-
 
 
 	// Create a Direct2D target bitmap associated with the
@@ -627,9 +602,13 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 }
 
-// Determine the dimensions of the render target and whether it will be scaled down.
+
+
+
 void DX::DeviceResources::UpdateRenderTargetSize()
 {
+    // Determine the dimensions of the render target and whether it will be scaled down.
+
 	m_effectiveDpi = m_dpi;
 
 	// To improve battery life on high resolution devices, render to a smaller render target
@@ -658,9 +637,13 @@ void DX::DeviceResources::UpdateRenderTargetSize()
 	m_outputSize.Height = max(m_outputSize.Height, 1);
 }
 
-// This method is called when the CoreWindow is created (or re-created).
+
+
+
 void DX::DeviceResources::SetWindow(CoreWindow^ window)
 {
+    // This method is called when the CoreWindow is created (or re-created).
+
 	DisplayInformation^ currentDisplayInformation = DisplayInformation::GetForCurrentView();
 
 	m_window = window;
@@ -673,9 +656,12 @@ void DX::DeviceResources::SetWindow(CoreWindow^ window)
 	CreateWindowSizeDependentResources();
 }
 
-// This method is called in the event handler for the SizeChanged event.
+
+
 void DX::DeviceResources::SetLogicalSize(Windows::Foundation::Size logicalSize)
 {
+    // This method is called in the event handler for the SizeChanged event.
+
 	if (m_logicalSize != logicalSize)
 	{
 		m_logicalSize = logicalSize;
@@ -683,9 +669,12 @@ void DX::DeviceResources::SetLogicalSize(Windows::Foundation::Size logicalSize)
 	}
 }
 
-// This method is called in the event handler for the DpiChanged event.
+
+
 void DX::DeviceResources::SetDpi(float dpi)
 {
+    // This method is called in the event handler for the DpiChanged event.
+
 	if (dpi != m_dpi)
 	{
 		m_dpi = dpi;

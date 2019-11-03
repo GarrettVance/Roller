@@ -24,6 +24,12 @@ namespace HvyDX
     };
 
 
+    struct VHG_Sphybox_ViewportInfo_Struct
+    {
+        DirectX::XMFLOAT4           viewportDimension;
+    };
+
+
     class Sphybox
     {
     public:
@@ -66,6 +72,9 @@ namespace HvyDX
 
         VHG_Sphybox_MVP_Struct                                  sphybox_MVP_ConbufData;
         Microsoft::WRL::ComPtr<ID3D11Buffer>                    sphybox_MVP_ConbufBuffer;
+
+        VHG_Sphybox_ViewportInfo_Struct                         sphybox_ViewportInfo_ConbufData;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                    sphybox_ViewportInfo_ConbufBuffer;
 
 
         Microsoft::WRL::ComPtr<ID3D11SamplerState>              sphybox_cube_sampler_state; 

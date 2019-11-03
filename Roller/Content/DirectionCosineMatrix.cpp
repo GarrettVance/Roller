@@ -277,11 +277,11 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 #endif
 
 
-    const float xlat_x_3rdPerson = 0.f;  //  -10.f; 
-    const float xlat_z_3rdPerson = 0.f;  //  5.f;
+    const float xlat_x_3rdPerson = 0.f;  //  0.f; 
+    const float xlat_z_3rdPerson = -10.f;  //  0.f;
     XMMATRIX spacePodXlat_3rdPerson = XMMatrixTranslation(spaceCurvePos.x + xlat_x_3rdPerson, spaceCurvePos.y, spaceCurvePos.z + xlat_z_3rdPerson);
 
-    XMMATRIX attitude_3rdPerson = XMMatrixRotationY(XM_PI / 2);
+    XMMATRIX attitude_3rdPerson = XMMatrixRotationY(-XM_PI / 4);
     attitude_3rdPerson = XMMatrixIdentity();
 
     XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = spacePodScaling3rdPerson * spacePodSpin * spacePodRotation * spacePodXlat_3rdPerson * attitude_3rdPerson;

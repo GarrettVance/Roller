@@ -61,6 +61,15 @@ void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMA
     context->UpdateSubresource1(sphybox_MVP_ConbufBuffer.Get(), 0, NULL, &sphybox_MVP_ConbufData, 0, 0, 0);
 
 
+
+    sphybox_ViewportInfo_ConbufData.viewportDimension = XMFLOAT4(
+        m_deviceResources->GetViewport_Small().TopLeftX,
+        m_deviceResources->GetViewport_Small().TopLeftY,
+        m_deviceResources->GetViewport_Small().Width,
+        m_deviceResources->GetViewport_Small().Height
+    );
+
+
     // context->OMSetDepthStencilState(ghv_DepthStencilState.Get(), 0);
 
 
@@ -82,7 +91,10 @@ void Sphybox::Render(const XMFLOAT3& eyePos, const XMMATRIX& viewMat, const XMMA
 
     if (pSmall > 0)
     {
+        context->UpdateSubresource1(sphybox_ViewportInfo_ConbufBuffer.Get(), 0, NULL, &sphybox_ViewportInfo_ConbufData, 0, 0, 0);
         context->PSSetShader(sphybox_pixelShaderNon.Get(), nullptr, 0);
+        ID3D11Buffer* constantBuffers[] = { sphybox_ViewportInfo_ConbufBuffer.Get() };
+        context->PSSetConstantBuffers1(0, 1, constantBuffers, nullptr, nullptr);
     }
     else
     {
@@ -263,8 +275,24 @@ void Sphybox::CreateDeviceDependentResources()
                 &sphybox_MVP_ConbufBuffer
                 )
             );
+
+        CD3D11_BUFFER_DESC sphyboxViewportConbufDesc(sizeof(VHG_Sphybox_ViewportInfo_Struct) , D3D11_BIND_CONSTANT_BUFFER);
+
+        static_assert(
+            (sizeof(VHG_Sphybox_ViewportInfo_Struct) % 16) == 0,
+            "Constant Buffer struct must be 16-byte aligned"
+            );
+
+        DX::ThrowIfFailed(
+            m_deviceResources->GetD3DDevice()->CreateBuffer(
+                &sphyboxViewportConbufDesc,
+                nullptr,
+                &sphybox_ViewportInfo_ConbufBuffer
+                )
+            );
     });
-    
+   
+
 
     auto createPSNonTask = loadPSNonTask.then([this](const std::vector<byte>& fileData) 
     {
