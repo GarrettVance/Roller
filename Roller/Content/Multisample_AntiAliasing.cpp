@@ -138,7 +138,7 @@ void Hvy3DScene::MSAA_Render()
 
     context->RSSetState(e_rasterizer_state_solid.Get());
 
-    this->m_PTF->RenderViewportLarge(); // Render the Lorenz Attractor loft;  
+    this->m_PTF->Render(viewMatrix_1stPerson_MAT, mProj, -1); // Render the Lorenz Attractor loft;  
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -154,7 +154,7 @@ void Hvy3DScene::MSAA_Render()
 
     this->e_sphybox->Render(m_vEye, viewMatrix_3rdPerson_MAT, mProj, 1); 
 
-    this->m_PTF->RenderViewportSmall(); // Render the Lorenz Attractor loft;  
+    this->m_PTF->Render(viewMatrix_3rdPerson_MAT, mProj, 1); // Render the Lorenz Attractor loft;  
 
     this->m_Mandelpod->Render(viewMatrix_3rdPerson_MAT, mProj, 1); 
 

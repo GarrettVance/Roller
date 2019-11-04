@@ -261,9 +261,9 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\AlteredDevice.h" />
     <ClInclude Include="Content\CWS_WaveFrontReader.h" />
-    <ClInclude Include="Content\ParallelTransportFrame.h" />
     <ClInclude Include="Content\Sphybox.h" />
     <ClInclude Include="Content\TexCoSphere.h" />
+    <ClInclude Include="Content\XModLorenzLoft.h" />
     <ClInclude Include="Content\XModMandelpod.h" />
     <ClInclude Include="RollerMain.h" />
     <ClInclude Include="Common\DirectXHelper.h" />
@@ -281,6 +281,7 @@
     <ClCompile Include="Content\Sphybox.cpp" />
     <ClCompile Include="Content\TexCoSphere.cpp" />
     <ClCompile Include="Content\VertexTangents.cpp" />
+    <ClCompile Include="Content\XModLorenzLoft.cpp" />
     <ClCompile Include="Content\XModMandelpod.cpp" />
     <ClCompile Include="RollerMain.cpp" />
     <ClCompile Include="Content\Hvy3DScene.cpp" />

@@ -14,7 +14,7 @@
 
 #include "..\Common\AlteredDevice.h"
 #include "..\Common\StepTimer.h"
-#include "ParallelTransportFrame.h"
+#include "XModLorenzLoft.h"
 #include "XModMandelpod.h"
 #include "Sphybox.h"
 #include "CWS_WaveFrontReader.h"
@@ -105,7 +105,8 @@ namespace HvyDX
     private:
         std::shared_ptr<DX::DeviceResources>                m_deviceResources;
 
-        std::unique_ptr<HvyDX::ParallelTransportFrame>      m_PTF;
+        std::unique_ptr<HvyDX::XModLorenzLoft>                  m_PTF; // TODO: rename to m_LorenzLoft;
+
         std::unique_ptr<HvyDX::XModMandelpod>               m_Mandelpod;
         std::unique_ptr<HvyDX::Sphybox>                     e_sphybox;
 

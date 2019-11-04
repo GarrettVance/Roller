@@ -27,7 +27,7 @@ Hvy3DScene::Hvy3DScene(const std::shared_ptr<DX::DeviceResources>& deviceResourc
 
 
     //  instantiate the ParallelTransportFrame prior to calling CreateDeviceDependentResources: 
-    m_PTF = std::make_unique<HvyDX::ParallelTransportFrame>(deviceResources);
+    m_PTF = std::make_unique<HvyDX::XModLorenzLoft>(deviceResources);
 
     //  instantiate the Mandelpod prior to calling CreateDeviceDependentResources: 
     m_Mandelpod = std::make_unique<HvyDX::XModMandelpod>(deviceResources);
@@ -122,14 +122,14 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
     XMFLOAT3 spaceCurveNormal{ 0.f, 0.f, 0.f };  // ghv: added 20190313; 
     XMFLOAT3 spaceCurveBinormal{ 0.f, 0.f, 0.f };  // ghv: added 20190315; 
 
-    if (!m_PTF->ptf_axons.empty())
+    if (!m_PTF->loft_axons.empty())
     {
-        uint32_t card = (uint32_t)(m_PTF->ptf_axons.size());
+        uint32_t card = (uint32_t)(m_PTF->loft_axons.size());
 
-        spaceCurvePos = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_position_r;
-        spaceCurveTangent = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_tangent_drdt; 
-        spaceCurveNormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_normal; 
-        spaceCurveBinormal = this->m_PTF->ptf_axons.at(idxSpaceCurveElt).axon_binormal; 
+        spaceCurvePos = this->m_PTF->loft_axons.at(idxSpaceCurveElt).axon_position_r;
+        spaceCurveTangent = this->m_PTF->loft_axons.at(idxSpaceCurveElt).axon_tangent_drdt; 
+        spaceCurveNormal = this->m_PTF->loft_axons.at(idxSpaceCurveElt).axon_normal; 
+        spaceCurveBinormal = this->m_PTF->loft_axons.at(idxSpaceCurveElt).axon_binormal; 
 
         if (fElapsedTime > 0.03f)
         {
@@ -242,19 +242,19 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
 
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportSmall_Data.model,
+        &m_PTF->loft_WVP_ViewportMinor_Data.model,
         XMMatrixTranspose(
             loft_3rdPerson_WorldTransformation  // 3rdPerson is rendered in small viewport;
         )
     );
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportSmall_Data.view,
+        &m_PTF->loft_WVP_ViewportMinor_Data.view,
         XMMatrixTranspose(
             viewMatrix_3rdPerson_MAT
         )
     );
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportSmall_Data.projection,
+        &m_PTF->loft_WVP_ViewportMinor_Data.projection,
         XMMatrixTranspose(
             projectionMatrix_MAT
         )
@@ -264,19 +264,19 @@ void Hvy3DScene::Update(DX::StepTimer const& timer)
 
 
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportLarge_Data.model,
+        &m_PTF->loft_WVP_ViewportMajor_Data.model,
         XMMatrixTranspose(
             loft_1stPerson_WorldTransformation // 1stPerson is rendered in the LARGE viewport;
         )
     );
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportLarge_Data.view,
+        &m_PTF->loft_WVP_ViewportMajor_Data.view,
         XMMatrixTranspose(
             viewMatrix_1stPerson_MAT
         )
     );
     DirectX::XMStoreFloat4x4(
-        &m_PTF->ptf_WVP_ViewportLarge_Data.projection,
+        &m_PTF->loft_WVP_ViewportMajor_Data.projection,
         XMMatrixTranspose(
             projectionMatrix_MAT
         )

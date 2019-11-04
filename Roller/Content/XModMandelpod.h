@@ -11,9 +11,10 @@
 
 #include "..\Common\AlteredDevice.h"
 #include "..\Common\StepTimer.h"
-#include "ParallelTransportFrame.h"
-#include "Sphybox.h"
+// #include "ParallelTransportFrame.h"
+// #include "Sphybox.h"
 #include "CWS_WaveFrontReader.h"
+
 
 namespace HvyDX 
 {

@@ -85,15 +85,15 @@
     <ClCompile Include="Content\XModMandelpod.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Content\XModLorenzLoft.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="RollerMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Content\CWS_WaveFrontReader.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\ParallelTransportFrame.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\Sphybox.h">
@@ -106,6 +106,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Content\XModMandelpod.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\XModLorenzLoft.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>

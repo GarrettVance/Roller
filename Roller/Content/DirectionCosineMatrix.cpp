@@ -10,7 +10,7 @@
 
 #include "pch.h"
 #include "Hvy3DScene.h"
-#include "ParallelTransportFrame.h"
+// #include "ParallelTransportFrame.h"
 #include "..\Common\DirectXHelper.h"
 
 using namespace HvyDX;
