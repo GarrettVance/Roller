@@ -57,13 +57,12 @@ namespace HvyDX
         void CreateDeviceDependentResources();
         void ReleaseDeviceDependentResources();
 
-        /*
-        void Update(
-            DirectX::XMMATRIX        const&           p_ParallelTransportFrameWorldMatrix,
-            DirectX::XMMATRIX        const&           p_parentSceneViewMatrix,
-            DirectX::XMMATRIX        const&           p_parentSceneProjectionMatrix
+        void Store(
+            DirectX::XMMATRIX const& p_World,
+            DirectX::XMMATRIX const& p_View,
+            DirectX::XMMATRIX const& p_Proj,
+            int pSmall
         );
-        */
 
 
         void Render(const DirectX::XMMATRIX& viewMat, const DirectX::XMMATRIX& projMat, int pSmall);

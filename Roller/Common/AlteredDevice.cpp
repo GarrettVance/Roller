@@ -266,6 +266,10 @@ void DX::DeviceResources::gv_CalcViewports(void)
     }; 
 
     float ratioMinorToMajor = 0.25f;  // Use 0.3f (or 0.2f); 
+
+    ratioMinorToMajor = 0.8f;
+    ratioMinorToMajor = 0.3f;
+
     float wMinor = ratioMinorToMajor * wMajor;
     float hMinor = ratioMinorToMajor * hMajor;
     float xMinor = 0.f;  

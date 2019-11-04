@@ -70,37 +70,36 @@ XModLorenzLoft::XModLorenzLoft(const std::shared_ptr<DX::DeviceResources>& devic
 
 
 
-/*
-void LorenzLoft::Update(
-    XMMATRIX        const&           p_ParallelTransportFrameWorldMatrix,
-    XMMATRIX        const&           p_parentSceneViewMatrix,
-    XMMATRIX        const&           p_parentSceneProjectionMatrix
+void XModLorenzLoft::Store(
+            DirectX::XMMATRIX const& p_World,
+            DirectX::XMMATRIX const& p_View,
+            DirectX::XMMATRIX const& p_Proj,
+            int pSmall
 )
 {
+    VHG_LoftMVPStruct* wvpData = (pSmall > 0) ? &loft_WVP_ViewportMinor_Data : &loft_WVP_ViewportMajor_Data;
+
     DirectX::XMStoreFloat4x4(
-        &loft_WVP_Data.model,
+        &wvpData->model,
         XMMatrixTranspose(
-            p_ParallelTransportFrameWorldMatrix
+            p_World
         )
     );
 
     DirectX::XMStoreFloat4x4(
-        &loft_WVP_Data.view,
+        &wvpData->view,
         XMMatrixTranspose(
-            p_parentSceneViewMatrix
+            p_View
         )
     );
 
     DirectX::XMStoreFloat4x4(
-        &loft_WVP_Data.projection,
+        &wvpData->projection,
         XMMatrixTranspose(
-            p_parentSceneProjectionMatrix
+            p_Proj
         )
     );
 }
-*/
-
-
 
 
 

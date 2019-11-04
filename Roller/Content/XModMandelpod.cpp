@@ -23,14 +23,9 @@ XModMandelpod::XModMandelpod(const std::shared_ptr<DX::DeviceResources>& deviceR
     mandelpod_loadingComplete(false),
     mandelpod_vertexCount(0),
     mandelpod_indexCount(0),
-    // e_UsingMSAA(true),
     m_deviceResources(deviceResources)
 {
-    // e_ZOffset = +36.f;   // TODO: remove;
-
     CreateDeviceDependentResources();
-    
-    // unused:  CreateWindowSizeDependentResources();
 }
 
 
@@ -44,61 +39,6 @@ XModMandelpod::XModMandelpod(const std::shared_ptr<DX::DeviceResources>& deviceR
 #if 3 == 4
 void XModMandelpod::Update(DX::StepTimer const& timer)
 {
-    if (!mandelpod_loadingComplete)
-    {
-        return;
-    }
-
-    // Calculate the correct rotation matrix to align the mandelPod: 
-
-    XMMATRIX mCameraRot = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
-
-    CalculateViewMatrix_Following( spaceCurvePos, spaceCurveTangent, spaceCurveNormal, mCameraRot ); 
-
-    //      
-    //  World Transformation of the Space Pod (aka MandelPod)
-    //          
-#ifdef _DEBUG
-    float accumulatedRadians = (float)timer.GetTotalSeconds() * XMConvertToRadians(45.f);  
-    float properRadians = static_cast<float>(fmod(accumulatedRadians, DirectX::XM_2PI)); 
-    XMMATRIX spacePodSpin = XMMatrixRotationX(properRadians);  
-#else
-    XMMATRIX spacePodSpin = XMMatrixIdentity();
-#endif
-
-    XMMATRIX spacePodRotation = DirectionCosineMatrix(spaceCurveTangent, spaceCurveNormal, spaceCurveBinormal); 
-
-
-    XMMATRIX spacePodXlat_1stPerson = XMMatrixTranslation(spaceCurvePos.x - 2.f, spaceCurvePos.y, spaceCurvePos.z + e_ZOffset);
-
-
-#ifdef _DEBUG
-    XMMATRIX spacePodScaling1stPerson = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-#else
-    XMMATRIX spacePodScaling1stPerson = XMMatrixScaling(4.f, 4.f, 4.f);
-#endif
-
-    XMMATRIX mandelpod_worldMatrix_1stPerson_MAT = spacePodScaling1stPerson * spacePodSpin * spacePodRotation * spacePodXlat_1stPerson;
-    XMStoreFloat4x4(&mandelpod_worldMatrix_1stPerson_F4X4, mandelpod_worldMatrix_1stPerson_MAT);
-
-
-
-#ifdef _DEBUG
-    XMMATRIX spacePodScaling3rdPerson = XMMatrixScaling(1.6f, 1.6f, 1.6f);
-#else
-    XMMATRIX spacePodScaling3rdPerson = XMMatrixScaling(5.f, 5.f, 5.f); 
-#endif
-
-
-    const float xlat_x_3rdPerson = 0.f;  //  0.f; 
-    const float xlat_z_3rdPerson = -10.f;  //  0.f;
-    XMMATRIX spacePodXlat_3rdPerson = XMMatrixTranslation(spaceCurvePos.x + xlat_x_3rdPerson, spaceCurvePos.y, spaceCurvePos.z + xlat_z_3rdPerson);
-
-    XMMATRIX attitude_3rdPerson = XMMatrixRotationY(-XM_PI / 4);
-    attitude_3rdPerson = XMMatrixIdentity();
-
-    XMMATRIX mandelpod_worldMatrix_3rdPerson_MAT = spacePodScaling3rdPerson * spacePodSpin * spacePodRotation * spacePodXlat_3rdPerson * attitude_3rdPerson;
-    XMStoreFloat4x4(&mandelpod_worldMatrix_3rdPerson_F4X4, mandelpod_worldMatrix_3rdPerson_MAT);
 }
 #endif 
 
@@ -203,6 +143,7 @@ void XModMandelpod::Render(const DirectX::XMMATRIX& viewMat, const DirectX::XMMA
 
     context->UpdateSubresource1(transformBuffer, 0, NULL, transformData, 0, 0, 0);
 
+    // 
     context->RSSetState(mandelpod_rasterizerState.Get());  //  TODO:  is this still necessary???
 
     UINT vb_stride = sizeof(WaveFrontReader<DWORD>::WFR_Vertex);
@@ -473,7 +414,7 @@ void XModMandelpod::CreateRasterizerState()
     rasterizerstate_descr.FillMode = D3D11_FILL_SOLID;
     rasterizerstate_descr.FrontCounterClockwise = FALSE;
     rasterizerstate_descr.CullMode = D3D11_CULL_NONE;
-    rasterizerstate_descr.MultisampleEnable = FALSE;
+    rasterizerstate_descr.MultisampleEnable = TRUE;
 
     DX::ThrowIfFailed(
         m_deviceResources->GetD3DDevice()->CreateRasterizerState(
@@ -630,9 +571,7 @@ void XModMandelpod::CreateDeviceDependentResources()
 
     auto createCubeTask = (createPSTask && createVSTask).then([this] () 
     {
-#ifdef GHV_OPTION_LOAD_MESH_MODEL
         CreateVertexBufferWavefrontOBJ();
-#endif
     });
 
 

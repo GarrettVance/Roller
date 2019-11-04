@@ -31,7 +31,6 @@
 #pragma comment(lib, "DirectXMesh")
 
 
-#define GHV_OPTION_LOAD_MESH_MODEL
 
 #undef GHV_OPTION_DRAW_SPOKES
 

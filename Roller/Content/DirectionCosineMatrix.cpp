@@ -98,22 +98,28 @@ DirectX::XMMATRIX Hvy3DScene::DirectionCosineMatrix(
 
 
 
-
-
-
-void Hvy3DScene::CalculateViewMatrix_Following(
-    DirectX::XMFLOAT3 const& p_Position, 
-    DirectX::XMFLOAT3 const& p_Tangent, 
-    DirectX::XMFLOAT3 const& p_Normal,
-    DirectX::XMMATRIX const& p_RotationMatrix
-)
+DirectX::XMMATRIX Hvy3DScene::CalculateViewMatrix_3rdPerson()
 {
     XMVECTOR cameraPosition3rdPerson = XMVectorSet(-20.f, 0.f, -4.f, 1.0f);
     XMVECTOR cameraLookAt3rdPerson = XMVectorSet(10.f, 0.0f, 36.f, 1.0f); //
     XMVECTOR worldUpDirection3rdPerson = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); 
 
     XMMATRIX viewMatrix_3rdPerson_MAT = XMMatrixLookAtLH(cameraPosition3rdPerson, cameraLookAt3rdPerson, worldUpDirection3rdPerson); // Left-handed;
-    XMStoreFloat4x4(&viewMatrix_3rdPerson_F4X4, viewMatrix_3rdPerson_MAT);
+
+    return viewMatrix_3rdPerson_MAT;
+}
+
+
+
+
+
+DirectX::XMMATRIX Hvy3DScene::CalculateViewMatrix_1stPersonFollowing(
+    DirectX::XMFLOAT3 const& p_Position, 
+    DirectX::XMFLOAT3 const& p_Tangent, 
+    DirectX::XMFLOAT3 const& p_Normal
+)
+{
+
 
     //  
     //  The curve Normal points inward towards the center of curvature, 
@@ -160,7 +166,10 @@ void Hvy3DScene::CalculateViewMatrix_Following(
     XMVECTOR worldUpDirection = XMVectorNegate(normalizedNormalXMV);
     
     XMMATRIX viewMatrix_1stPerson_MAT = XMMatrixLookAtLH(cameraPosition, cameraLookAt, worldUpDirection); // Left-handed;
-    XMStoreFloat4x4(&viewMatrix_1stPerson_F4X4, viewMatrix_1stPerson_MAT);
+
+    return viewMatrix_1stPerson_MAT; 
+
+    //  XMStoreFloat4x4(&viewMatrix_1stPerson_F4X4, viewMatrix_1stPerson_MAT);
 }
 
 

@@ -47,21 +47,6 @@ namespace HvyDX
 
 
 
-    /*
-    struct KMI_InitialView_struct
-    {
-        DirectX::XMFLOAT3           f3_camera_position;
-        float                       f_look_at_pitch;
-        float                       f_look_at_yaw;
-    };
-    */
-
-
-
-
-
-
-
 
 
     class Hvy3DScene
@@ -81,12 +66,13 @@ namespace HvyDX
         void MSAA_TestDeviceSupport();
 
 
-        void CalculateViewMatrix_Following(
+        DirectX::XMMATRIX CalculateViewMatrix_1stPersonFollowing(
             DirectX::XMFLOAT3 const& p_Position, 
             DirectX::XMFLOAT3 const& p_Tangent, 
-            DirectX::XMFLOAT3 const& p_Normal,
-            DirectX::XMMATRIX const& p_RotationMatrix
+            DirectX::XMFLOAT3 const& p_Normal
         ); 
+
+        DirectX::XMMATRIX CalculateViewMatrix_3rdPerson(); 
 
         DirectX::XMMATRIX DirectionCosineMatrix(
             DirectX::XMFLOAT3 p_Tangent,
