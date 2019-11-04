@@ -79,10 +79,10 @@
     <ClCompile Include="Content\Multisample_AntiAliasing.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <ClCompile Include="Content\MandelPod.cpp">
+    <ClCompile Include="Content\VertexTangents.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <ClCompile Include="Content\VertexTangents.cpp">
+    <ClCompile Include="Content\XModMandelpod.cpp">
       <Filter>Content</Filter>
     </ClCompile>
   </ItemGroup>
@@ -104,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="Common\AlteredDevice.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\XModMandelpod.h">
+      <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -161,12 +164,6 @@
     <FxCompile Include="HLSL\PhongBumpVertexShader.hlsl">
       <Filter>HLSL</Filter>
     </FxCompile>
-    <FxCompile Include="HLSL\PTF_PixelShader.hlsl">
-      <Filter>HLSL</Filter>
-    </FxCompile>
-    <FxCompile Include="HLSL\PTF_VertexShader.hlsl">
-      <Filter>HLSL</Filter>
-    </FxCompile>
     <FxCompile Include="HLSL\Sphybox_VertexShader.hlsl">
       <Filter>HLSL</Filter>
     </FxCompile>
@@ -174,6 +171,15 @@
       <Filter>HLSL</Filter>
     </FxCompile>
     <FxCompile Include="HLSL\SphyboxNon_PixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\LoftMajorPixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\LoftMinorPixelShader.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\LoftVertexShader.hlsl">
       <Filter>HLSL</Filter>
     </FxCompile>
   </ItemGroup>

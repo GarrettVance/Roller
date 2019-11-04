@@ -53,7 +53,7 @@ namespace HvyDX
     };
 
 
-    struct VHG_ConBuf_MVP_Struct
+    struct VHG_LoftMVPStruct
     {
         DirectX::XMFLOAT4X4     model;
         DirectX::XMFLOAT4X4     view;
@@ -104,10 +104,10 @@ namespace HvyDX
 
         std::vector<HvyDX::VHG_Axonodromal_Vertex>          ptf_axons; 
 
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_ViewportSmall_Buffer;
-        VHG_ConBuf_MVP_Struct                               ptf_WVP_ViewportSmall_Data;
-        Microsoft::WRL::ComPtr<ID3D11Buffer>                ptf_WVP_ViewportLarge_Buffer;
-        VHG_ConBuf_MVP_Struct                               ptf_WVP_ViewportLarge_Data;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                loft_WVP_ViewportMinor_Buffer;
+        VHG_LoftMVPStruct                               ptf_WVP_ViewportSmall_Data;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>                loft_WVP_ViewportMajor_Buffer;
+        VHG_LoftMVPStruct                               ptf_WVP_ViewportLarge_Data;
 
 
     private: 
@@ -127,10 +127,9 @@ namespace HvyDX
 
 
 
-        Microsoft::WRL::ComPtr<ID3D11VertexShader>          ptf_vertexShader;
-        
-
-        Microsoft::WRL::ComPtr<ID3D11PixelShader>           ptf_pixelShader;
+        Microsoft::WRL::ComPtr<ID3D11VertexShader>          loft_vertexShader;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>           loft_minorPixelShader;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>           loft_majorPixelShader;
 
 
         Microsoft::WRL::ComPtr<ID3D11SamplerState>          ptf_loft_texture_sampler_state;

@@ -106,6 +106,19 @@ void ParallelTransportFrame::Update(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 void ParallelTransportFrame::RenderViewportSmall()  
 { 
     if (!ptf_loadingComplete)
@@ -115,12 +128,19 @@ void ParallelTransportFrame::RenderViewportSmall()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    context->UpdateSubresource1( ptf_WVP_ViewportSmall_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportSmall_Data,    0,   0,  0 );
-    context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_ViewportSmall_Buffer.GetAddressOf(), nullptr,  nullptr );
+    context->UpdateSubresource1( loft_WVP_ViewportMinor_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportSmall_Data,    0,   0,  0 );
+    context->VSSetConstantBuffers1( 0,   1,   loft_WVP_ViewportMinor_Buffer.GetAddressOf(), nullptr,  nullptr );
 
     context->IASetInputLayout(ptf_inputLayout.Get());
-    context->VSSetShader(ptf_vertexShader.Get(), nullptr, 0);
-    context->PSSetShader(ptf_pixelShader.Get(), nullptr, 0);
+    context->VSSetShader(loft_vertexShader.Get(), nullptr, 0);
+
+
+
+    // depends on pSmall flag
+    context->PSSetShader(loft_minorPixelShader.Get(), nullptr, 0);
+
+
+
     context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
     context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
     UINT vertex_buffer_2_stride = sizeof(VHG_Vertex_PosTex);
@@ -140,7 +160,7 @@ void ParallelTransportFrame::RenderViewportSmall()
 
 
 
-void ParallelTransportFrame::RenderViewportLarge()  
+void ParallelTransportFrame::RenderViewportLarge()   // TODO: merge 2 Render methods into one;
 { 
     if (!ptf_loadingComplete)
     {
@@ -149,12 +169,12 @@ void ParallelTransportFrame::RenderViewportLarge()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    context->UpdateSubresource1( ptf_WVP_ViewportLarge_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportLarge_Data,    0,   0,  0 );
-    context->VSSetConstantBuffers1( 0,   1,   ptf_WVP_ViewportLarge_Buffer.GetAddressOf(), nullptr,  nullptr );
+    context->UpdateSubresource1( loft_WVP_ViewportMajor_Buffer.Get(),   0,  NULL, &ptf_WVP_ViewportLarge_Data,    0,   0,  0 );
+    context->VSSetConstantBuffers1( 0,   1,   loft_WVP_ViewportMajor_Buffer.GetAddressOf(), nullptr,  nullptr );
 
     context->IASetInputLayout(ptf_inputLayout.Get());
-    context->VSSetShader(ptf_vertexShader.Get(), nullptr, 0);
-    context->PSSetShader(ptf_pixelShader.Get(), nullptr, 0);
+    context->VSSetShader(loft_vertexShader.Get(), nullptr, 0);
+    context->PSSetShader(loft_majorPixelShader.Get(), nullptr, 0);
     context->PSSetShaderResources(0, 1, ptf_loft_texture_srv.GetAddressOf());
     context->PSSetSamplers(0, 1, ptf_loft_texture_sampler_state.GetAddressOf());
     UINT vertex_buffer_2_stride = sizeof(VHG_Vertex_PosTex);
@@ -169,6 +189,22 @@ void ParallelTransportFrame::RenderViewportLarge()
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context->Draw( ptf_vertex_buffer_2_count, 0 );
 }  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -711,15 +747,10 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
     //  
 
-    auto loadVSTask = DX::ReadDataAsync(L"PTF_VertexShader.cso");
-    auto loadPSTask = DX::ReadDataAsync(L"PTF_PixelShader.cso");
+    auto loadVSTask = DX::ReadDataAsync(L"LoftVertexShader.cso");
+    auto loadPSMinorTask = DX::ReadDataAsync(L"LoftMinorPixelShader.cso");
+    auto loadPSMajorTask = DX::ReadDataAsync(L"LoftMajorPixelShader.cso");
 
-    //      
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-    //                   Create VS Vertex Shader 
-    //                   Create Input Layout Object              
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-    //  
 
     auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
     {
@@ -728,7 +759,7 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
                     &fileData[0],
                     fileData.size(),
                     nullptr,
-                    &ptf_vertexShader
+                    &loft_vertexShader
                 )
             );
 
@@ -736,30 +767,25 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
     });
 
 
-    //      
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-    //                        Create PS Pixel Shader 
-    //                   Create the WVP Constant Buffer               
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-    //  
 
-    auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
+
+    auto createPSMinorTask = loadPSMinorTask.then([this](const std::vector<byte>& fileData)
     {
             DX::ThrowIfFailed(
                 m_deviceResources->GetD3DDevice()->CreatePixelShader(
                     &fileData[0],
                     fileData.size(),
                     nullptr,
-                    &ptf_pixelShader )
+                    &loft_minorPixelShader )
             );
 
             CD3D11_BUFFER_DESC constantBufferDesc(
-                sizeof(VHG_ConBuf_MVP_Struct),
+                sizeof(VHG_LoftMVPStruct),
                 D3D11_BIND_CONSTANT_BUFFER
             );
 
             static_assert(
-                (sizeof(VHG_ConBuf_MVP_Struct) % 16) == 0,
+                (sizeof(VHG_LoftMVPStruct) % 16) == 0,
                 "Constant Buffer struct must be 16-byte aligned"
                 );
 
@@ -767,20 +793,42 @@ void ParallelTransportFrame::CreateDeviceDependentResources()
                 m_deviceResources->GetD3DDevice()->CreateBuffer(
                     &constantBufferDesc,
                     nullptr,
-                    &ptf_WVP_ViewportSmall_Buffer )
+                    &loft_WVP_ViewportMinor_Buffer )
             );
+    });
+
+
+
+    auto createPSMajorTask = loadPSMajorTask.then([this](const std::vector<byte>& fileData)
+    {
+            DX::ThrowIfFailed(
+                m_deviceResources->GetD3DDevice()->CreatePixelShader(
+                    &fileData[0],
+                    fileData.size(),
+                    nullptr,
+                    &loft_majorPixelShader )
+            );
+
+            CD3D11_BUFFER_DESC constantBufferDesc(
+                sizeof(VHG_LoftMVPStruct),
+                D3D11_BIND_CONSTANT_BUFFER
+            );
+
+            static_assert(
+                (sizeof(VHG_LoftMVPStruct) % 16) == 0,
+                "Constant Buffer struct must be 16-byte aligned"
+                );
 
             DX::ThrowIfFailed(
                 m_deviceResources->GetD3DDevice()->CreateBuffer(
                     &constantBufferDesc,
                     nullptr,
-                    &ptf_WVP_ViewportLarge_Buffer )
+                    &loft_WVP_ViewportMajor_Buffer )
             );
-
     });
 
 
-    auto createCubeTask = (createPSTask && createVSTask).then([this]()
+    auto createCubeTask = (createPSMajorTask && createPSMinorTask && createVSTask).then([this]()
     {
             this->HansonParallelTransportFrame();
     });
@@ -804,8 +852,8 @@ void ParallelTransportFrame::ReleaseDeviceDependentResources()
 {
     ptf_loadingComplete = false; 
 
-    ptf_WVP_ViewportSmall_Buffer.Reset(); 
-    ptf_WVP_ViewportLarge_Buffer.Reset(); 
+    loft_WVP_ViewportMinor_Buffer.Reset(); 
+    loft_WVP_ViewportMajor_Buffer.Reset(); 
 
 }  
 //  Closes  ParallelTransportFrame::ReleaseDeviceDependentResources; 

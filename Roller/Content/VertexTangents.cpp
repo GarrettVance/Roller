@@ -21,7 +21,7 @@ using namespace Windows::Foundation;
 
 
 
-void Hvy3DScene::ComputeVertexTangents(
+void XModMandelpod::ComputeVertexTangents(
     std::vector<WaveFrontReader<DWORD>::WFR_Vertex>  &   refVertices, 
     std::vector<DWORD> const & refIndices
 )
